@@ -6,6 +6,7 @@
 <title>2025-2026 美国9大城市气温对比分析报告</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 html { scroll-padding-top: 72px; scroll-behavior: smooth; }
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -52,12 +53,10 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
 .warming { color: #dc2626; }
 .cooling { color: #2563eb; }
 .neutral-diff { color: #6b7280; }
-.city-card { background: #fff; border-radius: 12px; padding: 28px; margin-bottom: 28px; scroll-margin-top: 80px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); content-visibility: auto; contain-intrinsic-size: 350px; }
+.city-card { background: #fff; border-radius: 12px; padding: 28px; margin-bottom: 28px; scroll-margin-top: 80px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
 .city-card-header h2 { font-size: 22px; font-weight: 700; color: #0f172a; }
 .city-card-header p { font-size: 14px; color: #4b5563; margin-top: 4px; }
-.chart-container { position: relative; height: 300px; margin-top: 16px; content-visibility: auto; contain-intrinsic-size: 300px; }
-.chart-placeholder { display: flex; align-items: center; justify-content: center; height: 100%; background: #f1f5f9; border-radius: 8px; color: #94a3b8; font-size: 14px; cursor: pointer; user-select: none; }
-.chart-placeholder:hover { background: #e2e8f0; color: #64748b; }
+.chart-container { position: relative; height: 300px; margin-top: 16px; }
 .footer { text-align: center; padding: 32px 48px; color: #9ca3af; font-size: 12px; border-top: 1px solid #e2e8f0; margin-top: 20px; }
 .weather-dashboard { background: #fff; border-radius: 12px; padding: 20px 24px; margin-bottom: 36px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
 .weather-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
@@ -534,11 +533,11 @@ function loadCacheAndFetch() {
     });
 }
 
-// Initialize weather - deferred 3s for faster initial paint
-setTimeout(loadCacheAndFetch, 3000);
+// Initialize
+loadCacheAndFetch();
 setInterval(fetchAllWeather, AUTO_REFRESH_INTERVAL);
 
-// ============ US Map (Lazy Loaded) ============
+// ============ US Map ============
 const MAP_CITIES = [
     { key: "Los_Angeles", name: "Los Angeles", lat: 34.05, lon: -118.24, trend: "&#9650; +1.3\u2103", trendClass: "warming" },
     { key: "Seattle", name: "Seattle", lat: 47.61, lon: -122.33, trend: "&#9650; +0.6\u2103", trendClass: "warming" },
@@ -551,40 +550,16 @@ const MAP_CITIES = [
     { key: "Boston", name: "Boston", lat: 42.36, lon: -71.06, trend: "&#9660; -0.9\u2103", trendClass: "cooling" }
 ];
 
-var mapInitialized = false;
-var leafletLoading = false;
-
-function loadLeafletAndInitMap() {
-    if (mapInitialized) return;
-    var container = document.getElementById('usMap');
+(function initMap() {
+    const container = document.getElementById('usMap');
     if (!container) return;
-
-    if (typeof L !== 'undefined') {
-        // Leaflet already loaded (e.g. from cache), init directly
-        _doInitMap(container);
-        return;
-    }
-
-    if (leafletLoading) return;
-    leafletLoading = true;
-
-    var script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
-    script.onload = function() { _doInitMap(container); leafletLoading = false; };
-    script.onerror = function() { leafletLoading = false; };
-    document.head.appendChild(script);
-}
-
-function _doInitMap(container) {
-    if (mapInitialized) return;
-    mapInitialized = true;
-    var map = L.map('usMap', { scrollWheelZoom: true, zoomControl: true }).setView([39, -97], 4);
+    const map = L.map('usMap', { scrollWheelZoom: true, zoomControl: true }).setView([39, -97], 4);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 18
     }).addTo(map);
-    MAP_CITIES.forEach(function(c) {
-        var trendColor = c.trendClass === 'warming' ? '#dc2626' : '#2563eb';
+    MAP_CITIES.forEach(c => {
+        const trendColor = c.trendClass === 'warming' ? '#dc2626' : '#2563eb';
         L.circleMarker([c.lat, c.lon], {
             radius: 8, fillColor: '#2563eb', color: '#ffffff', weight: 2, fillOpacity: 0.9
         }).addTo(map).bindTooltip(
@@ -594,23 +569,7 @@ function _doInitMap(container) {
             { permanent: true, direction: 'top', offset: [0, -8], className: 'city-map-label' }
         );
     });
-}
-
-// IntersectionObserver: load map when near viewport, fallback to 2s delay
-if ('IntersectionObserver' in window) {
-    var mapObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-            if (entry.isIntersecting) {
-                loadLeafletAndInitMap();
-                mapObserver.unobserve(entry.target);
-            }
-        });
-    }, { rootMargin: '400px' });
-    var mapContainer = document.getElementById('usMap');
-    if (mapContainer) mapObserver.observe(mapContainer);
-} else {
-    setTimeout(loadLeafletAndInitMap, 2000);
-}
+})();
 
 // ============ Nav Shortcuts ============
 function scrollToSection(id) {
@@ -637,7 +596,7 @@ function updateActiveNav() {
 window.addEventListener('scroll', updateActiveNav, { passive: true });
 window.addEventListener('load', updateActiveNav);
 
-// ============ Charts (Lazy Loaded) ============
+// ============ Charts ============
 const blueColor = '#2563eb';
 const redColor = '#dc2626';
 const blueFill = 'rgba(37, 99, 235, 0.08)';
@@ -645,15 +604,24 @@ const redFill = 'rgba(220, 38, 38, 0.08)';
 const diffFillWarm = 'rgba(220, 38, 38, 0.12)';
 const diffFillCool = 'rgba(37, 99, 235, 0.12)';
 
-window.chartInstances = window.chartInstances || {};
-window.chartInitDone = window.chartInitDone || {};
-
-function getChartConfig(data) {
+CITY_LIST.forEach(city => {
+    const data = CITY_DATA[city.key];
     const labels = data.dates;
+    
+    // Build datasets
     const h25 = data.h25.map(v => v === 'null' ? null : v);
     const h26 = data.h26.map(v => v === 'null' ? null : v);
     const diff = data.diff.map(v => v === 'null' ? null : v);
-    return {
+    
+    // Create tick labels (show every ~30 days)
+    const tickIndices = [];
+    for (let i = 0; i < labels.length; i += 30) {
+        tickIndices.push(i);
+    }
+    
+    const ctx = document.getElementById('chart_' + city.key).getContext('2d');
+    window.chartInstances = window.chartInstances || {};
+    window.chartInstances[city.key] = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
@@ -688,7 +656,11 @@ function getChartConfig(data) {
                     label: '温差 (2026-2025)',
                     data: diff,
                     borderColor: 'transparent',
-                    backgroundColor: diffFillWarm,
+                    backgroundColor: function(context) {
+                        const value = context.raw;
+                        if (value === null) return 'transparent';
+                        return value > 0 ? diffFillWarm : diffFillCool;
+                    },
                     borderWidth: 0,
                     pointRadius: 0,
                     tension: 0.2,
@@ -700,100 +672,67 @@ function getChartConfig(data) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
             plugins: {
                 legend: {
                     position: 'top',
-                    labels: { usePointStyle: true, padding: 16, font: { size: 12 } }
+                    labels: {
+                        usePointStyle: true,
+                        padding: 16,
+                        font: { size: 12 }
+                    }
                 },
                 tooltip: {
                     callbacks: {
-                        title: function(items) { return '日期: ' + items[0].label; },
+                        title: function(items) {
+                            return '日期: ' + items[0].label;
+                        },
                         label: function(item) {
                             if (item.dataset.label === '温差 (2026-2025)') {
                                 if (item.raw === null) return '温差: 无数据';
-                                return '温差: ' + (item.raw > 0 ? '+' : '') + item.raw.toFixed(1) + '\u2103';
+                                return '温差: ' + (item.raw > 0 ? '+' : '') + item.raw.toFixed(1) + '℃';
                             }
                             if (item.raw === null) return item.dataset.label + ': 无数据';
-                            return item.dataset.label + ': ' + item.raw.toFixed(1) + '\u2103';
+                            return item.dataset.label + ': ' + item.raw.toFixed(1) + '℃';
                         }
                     }
                 }
             },
             scales: {
                 x: {
-                    ticks: { maxTicksLimit: 15, font: { size: 10 }, autoSkip: true },
+                    ticks: {
+                        maxTicksLimit: 15,
+                        font: { size: 10 },
+                        autoSkip: true,
+                        callback: function(val, index) {
+                            const label = this.getLabelForValue(val);
+                            return label ? label : '';
+                        }
+                    },
                     grid: { display: false }
                 },
                 y: {
-                    title: { display: true, text: '温度 (\u2103)', font: { size: 11 } },
-                    ticks: { font: { size: 10 }, callback: function(v) { return v + '\u2103'; } },
+                    title: {
+                        display: true,
+                        text: '温度 (℃)',
+                        font: { size: 11 }
+                    },
+                    ticks: {
+                        font: { size: 10 },
+                        callback: function(v) { return v + '℃'; }
+                    },
                     grid: { color: '#f1f5f9' }
                 }
             }
         }
-    };
-}
-
-function initCityChart(key) {
-    if (window.chartInitDone[key]) return;
-    var canvas = document.getElementById('chart_' + key);
-    if (!canvas) return;
-    var container = canvas.parentElement;
-    var placeholder = container.querySelector('.chart-placeholder');
-    if (placeholder) placeholder.remove();
-    canvas.style.display = '';
-    var ctx = canvas.getContext('2d');
-    window.chartInstances[key] = new Chart(ctx, getChartConfig(CITY_DATA[key]));
-    window.chartInitDone[key] = true;
-}
-
-// Build city index mapping
-var cityIndexMap = {};
-CITY_LIST.forEach(function(c, i) { cityIndexMap[c.key] = i; });
-
-// Render first 2 cities immediately, rest as placeholders
-var INITIAL_RENDER_COUNT = 2;
-CITY_LIST.forEach(function(city, index) {
-    var canvas = document.getElementById('chart_' + city.key);
-    if (!canvas) return;
-    if (index < INITIAL_RENDER_COUNT) {
-        initCityChart(city.key);
-    } else {
-        canvas.style.display = 'none';
-        var container = canvas.parentElement;
-        var placeholder = document.createElement('div');
-        placeholder.className = 'chart-placeholder';
-        placeholder.textContent = '\u70B9\u51FB\u67E5\u770B'; // 点击查看
-        placeholder.onclick = function() { initCityChart(city.key); };
-        container.appendChild(placeholder);
-    }
-});
-
-// IntersectionObserver: lazy load charts when cards enter viewport
-if ('IntersectionObserver' in window) {
-    var chartObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-            if (entry.isIntersecting) {
-                var card = entry.target;
-                var canvasEl = card.querySelector('canvas');
-                if (canvasEl) {
-                    var key = canvasEl.id.replace('chart_', '');
-                    initCityChart(key);
-                }
-                chartObserver.unobserve(card);
-            }
-        });
-    }, { rootMargin: '300px' });
-
-    document.querySelectorAll('.city-card').forEach(function(card, index) {
-        if (index >= INITIAL_RENDER_COUNT) chartObserver.observe(card);
     });
-}
+});
 
 // ============ Scroll Navigation ============
 function scrollToCity(key) {
-    initCityChart(key);
     const el = document.getElementById(key);
     if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1021,8 +960,8 @@ async function refreshMonthlyData() {
     }
 }
 
-// Auto-refresh on load - deferred 5s to prioritize critical rendering
-setTimeout(refreshMonthlyData, 5000);
+// Auto-refresh on load
+setTimeout(refreshMonthlyData, 1500);
 
 // Auto-refresh every 6 hours
 setInterval(refreshMonthlyData, 6 * 60 * 60 * 1000);
