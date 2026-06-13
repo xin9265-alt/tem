@@ -18,7 +18,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
 .header { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #2563eb 100%); color: #fff; padding: 40px 48px; }
 .header h1 { font-size: 28px; font-weight: 700; letter-spacing: 0.5px; }
 .header .subtitle { font-size: 14px; opacity: 0.8; margin-top: 8px; }
-.nav-bar { background: #fff; padding: 12px 48px; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.nav-bar { background: #fff; padding: 12px 48px; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 2000; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 .nav-bar button { padding: 8px 18px; border: 1px solid #d1d5db; background: #fff; border-radius: 20px; cursor: pointer; font-size: 13px; color: #374151; transition: all 0.2s; white-space: nowrap; }
 .nav-bar button:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
 .nav-shortcut { background: #f1f5f9 !important; color: #475569 !important; border-color: #e2e8f0 !important; font-weight: 500 !important; }
@@ -200,6 +200,17 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
 .leaflet-default-icon-path { background-image: url(https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-icon.png); }
 @media (max-width: 768px) { .map-container { height: 350px; } .map-section { padding: 14px 10px; margin-bottom: 20px; border-radius: 8px; } .map-section h2 { font-size: 16px; } }
 @media (max-width: 480px) { .map-container { height: 280px; } .map-section { padding: 10px 6px; margin-bottom: 16px; } .map-section h2 { font-size: 14px; } }
+/* 2026 Compare Chart */
+.compare-section { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); color: #e2e8f0; border-radius: 12px; padding: 28px; margin-bottom: 36px; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+.compare-section h2 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 16px; }
+.compare-chart-container { position: relative; height: 420px; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; }
+.compare-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; justify-content: center; }
+.compare-legend label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #cbd5e1; cursor: pointer; user-select: none; padding: 4px 10px; border-radius: 6px; transition: background 0.2s; }
+.compare-legend label:hover { background: rgba(255,255,255,0.08); }
+.compare-legend label.legend-off { opacity: 0.4; text-decoration: line-through; }
+.compare-legend .legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+@media (max-width: 768px) { .compare-chart-container { height: 320px; } .compare-legend label { flex: 0 0 calc(50% - 10px); font-size: 12px; } }
+@media (max-width: 480px) { .compare-chart-container { height: 280px; } .compare-section { padding: 14px 10px; } .compare-section h2 { font-size: 16px; } .compare-legend { gap: 6px; } .compare-legend label { font-size: 11px; flex: 0 0 calc(50% - 6px); padding: 3px 6px; } }
 </style>
 </head>
 <body>
@@ -215,7 +226,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
     <button class="nav-shortcut" onclick="scrollToSection('us-map')" id="navBtn-us-map">&#x1F5FA; 地图</button>
     <button class="nav-shortcut" onclick="scrollToSection('monthly-table')" id="navBtn-monthly-table">&#x1F4CA; 月度</button>
     <span class="nav-sep">|</span>
-    <button onclick="scrollToCity('Los_Angeles')">Los Angeles</button><button onclick="scrollToCity('Seattle')">Seattle</button><button onclick="scrollToCity('Las_Vegas')">Las Vegas</button><button onclick="scrollToCity('Phoenix')">Phoenix</button><button onclick="scrollToCity('Houston')">Houston</button><button onclick="scrollToCity('Chicago')">Chicago</button><button onclick="scrollToCity('Atlanta')">Atlanta</button><button onclick="scrollToCity('Miami')">Miami</button><button onclick="scrollToCity('Boston')">Boston</button>
+    <button onclick="scrollToCity('Los_Angeles')">Los Angeles</button><button onclick="scrollToCity('Seattle')">Seattle</button><button onclick="scrollToCity('Las_Vegas')">Las Vegas</button><button onclick="scrollToCity('Phoenix')">Phoenix</button><button onclick="scrollToCity('Houston')">Houston</button><button onclick="scrollToCity('Chicago')">Chicago</button><button onclick="scrollToCity('Atlanta')">Atlanta</button><button onclick="scrollToCity('Miami')">Miami</button><button onclick="scrollToCity('Boston')">Boston</button><span class="nav-sep">|</span><button class="nav-shortcut" onclick="scrollToSection('compare2026')" id="navBtn-compare2026">&#x1F4C8; 对比</button>
 </div>
 
 <div class="container">
@@ -257,6 +268,14 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
 <div class="map-section" id="us-map">
     <h2>美国城市分布地图</h2>
     <div class="map-container" id="usMap"></div>
+</div>
+
+<div class="compare-section" id="compare2026">
+    <h2>2026年温度对比</h2>
+    <div class="compare-chart-container">
+        <canvas id="compareChart2026"></canvas>
+    </div>
+    <div class="compare-legend" id="compareLegend"></div>
 </div>
 
 <div class="table-section" id="monthly-table">
@@ -851,6 +870,7 @@ async function initCityChart(key) {
     window.chartInstances[key] = new Chart(ctx, getChartConfig(getCityData(key)));
     window.chartInitDone[key] = true;
     window.chartLoading[key] = false;
+    applyRefreshedDailyData(key);
 }
 
 // Build city index mapping
@@ -1002,6 +1022,34 @@ renderMonthlyTable();
 })();
 
 
+// Blend refreshed Open-Meteo daily data into chart datasets (h26 + diff)
+function applyRefreshedDailyData(key) {
+    const chart = window.chartInstances[key];
+    if (!chart) return;
+    const dailyMap = window.refreshedDailyData && window.refreshedDailyData[key];
+    if (!dailyMap) return;
+
+    var data = getCityData(key);
+    if (!data || !data.h25 || !data.h26 || !data.dates) return;
+
+    const newH26 = data.h26.map(function(v, i) {
+        const mmdd = data.dates[i];
+        if (dailyMap[mmdd] != null) return dailyMap[mmdd];
+        return v === 'null' ? null : v;
+    });
+
+    const newDiff = data.h25.map(function(v25, i) {
+        const v26 = newH26[i];
+        if (v25 === 'null' || v26 === null) return null;
+        return v26 - parseFloat(v25);
+    });
+
+    chart.data.datasets[1].data = newH26;
+    chart.data.datasets[2].data = newDiff;
+    chart.update();
+}
+
+
 // ============ Monthly Data Auto-Refresh ============
 const MONTHLY_CITY_COORDS = {
     "Los_Angeles": {lat: 34.05, lon: -118.24},
@@ -1109,6 +1157,9 @@ async function refreshMonthlyData() {
 
     await Promise.all(fetches);
 
+    // Store refreshed daily data globally for lazy-loaded charts
+    window.refreshedDailyData = dailyResults;
+
     // Update monthly table
     const tbody = document.querySelector('#monthlyTable tbody');
     const rows = tbody.querySelectorAll('tr');
@@ -1160,25 +1211,8 @@ async function refreshMonthlyData() {
             (avgDiff >= 0 ? '+' : '') + avgDiff.toFixed(1) + '\u2103</span>';
     });
 
-    // Update charts
-    if (window.chartInstances) {
-        cityKeys.forEach(key => {
-            const chart = window.chartInstances[key];
-            if (!chart) return;
-            const dailyMap = dailyResults[key];
-            if (!dailyMap) return;
-
-            var data = getCityData(key);
-            // Build updated h26 from existing + new daily data
-            const newH26 = data.h26.map((v, i) => {
-                const mmdd = data.dates[i];
-                if (dailyMap[mmdd] != null) return dailyMap[mmdd];
-                return v === 'null' ? null : v;
-            });
-            chart.data.datasets[1].data = newH26;
-            chart.update();
-        });
-    }
+    // Update charts (existing + future lazy-loaded)
+    cityKeys.forEach(key => { applyRefreshedDailyData(key); });
 
     const updateTime = new Date();
     const timeStr = String(updateTime.getHours()).padStart(2, '0') + ':' + String(updateTime.getMinutes()).padStart(2, '0');
@@ -1200,6 +1234,138 @@ setTimeout(refreshMonthlyData, 8000);
 
 // Auto-refresh every 6 hours
 setInterval(refreshMonthlyData, 6 * 60 * 60 * 1000);
+
+// ============ 2026 Compare Chart ============
+var COMPARE_COLORS = [
+    '#60a5fa', '#f59e0b', '#ef4444', '#f97316', '#a78bfa',
+    '#22d3ee', '#34d399', '#f472b6', '#e2e8f0'
+];
+var COMPARE_CITIES = ['Los_Angeles', 'Seattle', 'Las_Vegas', 'Phoenix', 'Houston', 'Chicago', 'Atlanta', 'Miami', 'Boston'];
+var COMPARE_LABELS = ['Los Angeles', 'Seattle', 'Las Vegas', 'Phoenix', 'Houston', 'Chicago', 'Atlanta', 'Miami', 'Boston'];
+var compareChart2026 = null;
+
+function buildCompareDatasets() {
+    var monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+    var datasets = [];
+    for (var i = 0; i < COMPARE_CITIES.length; i++) {
+        var cityData = getCityData(COMPARE_CITIES[i]);
+        var monthlyAvg = [null, null, null, null, null, null, null, null, null, null, null, null];
+        var monthCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        if (cityData) {
+            for (var j = 0; j < cityData.dates.length; j++) {
+                var d = cityData.dates[j];
+                var val = cityData.h26[j];
+                if (val === null || val === 'null' || val === undefined) continue;
+                var monthIdx = parseInt(d.substring(0, 2), 10) - 1;
+                if (monthIdx >= 0 && monthIdx < 12) {
+                    monthlyAvg[monthIdx] = (monthlyAvg[monthIdx] || 0) + parseFloat(val);
+                    monthCounts[monthIdx]++;
+                }
+            }
+            for (var m = 0; m < 12; m++) {
+                if (monthCounts[m] > 0) {
+                    monthlyAvg[m] = parseFloat((monthlyAvg[m] / monthCounts[m]).toFixed(1));
+                } else {
+                    monthlyAvg[m] = null;
+                }
+            }
+        }
+        datasets.push({
+            label: COMPARE_LABELS[i],
+            data: monthlyAvg,
+            borderColor: COMPARE_COLORS[i],
+            backgroundColor: COMPARE_COLORS[i] + '20',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            pointBackgroundColor: COMPARE_COLORS[i],
+            tension: 0.3,
+            spanGaps: false,
+            hidden: false
+        });
+    }
+    return { labels: monthNames, datasets: datasets };
+}
+
+function initCompareChart() {
+    if (window.chartInitDone['compare2026']) return;
+    var canvas = document.getElementById('compareChart2026');
+    if (!canvas) return;
+    loadChartJS().then(function() {
+        var built = buildCompareDatasets();
+        var ctx = canvas.getContext('2d');
+        compareChart2026 = new Chart(ctx, {
+            type: 'line',
+            data: built,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15,23,42,0.92)',
+                        titleColor: '#e2e8f0',
+                        bodyColor: '#cbd5e1',
+                        borderColor: 'rgba(255,255,255,0.12)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(ctx) {
+                                var v = ctx.parsed.y;
+                                return v != null ? ctx.dataset.label + ': ' + v.toFixed(1) + ' °C' : ctx.dataset.label + ': 无数据';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#94a3b8', font: { size: 12 } },
+                        grid: { color: 'rgba(255,255,255,0.06)' }
+                    },
+                    y: {
+                        ticks: { color: '#94a3b8', font: { size: 12 }, callback: function(v) { return v + '°'; } },
+                        grid: { color: 'rgba(255,255,255,0.06)' },
+                        title: { display: true, text: '温度 (°C)', color: '#94a3b8', font: { size: 13 } }
+                    }
+                }
+            }
+        });
+        renderCompareLegend();
+        window.chartInitDone['compare2026'] = true;
+    }).catch(function(e) {
+        console.warn('Compare chart init failed:', e.message);
+    });
+}
+
+function renderCompareLegend() {
+    var legendDiv = document.getElementById('compareLegend');
+    if (!legendDiv || !compareChart2026) return;
+    legendDiv.innerHTML = '';
+    for (var i = 0; i < COMPARE_CITIES.length; i++) {
+        (function(idx) {
+            var label = document.createElement('label');
+            var dot = document.createElement('span');
+            dot.className = 'legend-dot';
+            dot.style.backgroundColor = COMPARE_COLORS[idx];
+            label.appendChild(dot);
+            label.appendChild(document.createTextNode(COMPARE_LABELS[idx]));
+            label.addEventListener('click', function() {
+                var meta = compareChart2026.getDatasetMeta(idx);
+                meta.hidden = !meta.hidden;
+                if (meta.hidden) {
+                    label.classList.add('legend-off');
+                } else {
+                    label.classList.remove('legend-off');
+                }
+                compareChart2026.update();
+            });
+            legendDiv.appendChild(label);
+        })(i);
+    }
+}
+
+// Init compare chart on load (after chartjs available, deferred to not block critical path)
+setTimeout(initCompareChart, 1000);
 </script>
 
 </body>
