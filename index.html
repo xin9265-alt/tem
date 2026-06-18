@@ -58,8 +58,11 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
 .cooling { color: #2563eb; }
 .neutral-diff { color: #6b7280; }
 .city-card { background: #fff; border-radius: 12px; padding: 28px; margin-bottom: 28px; scroll-margin-top: 80px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); content-visibility: auto; contain-intrinsic-size: 350px; }
-.city-card-header h2 { font-size: 22px; font-weight: 700; color: #0f172a; }
-.city-card-header p { font-size: 14px; color: #4b5563; margin-top: 4px; }
+.city-card-header { display: flex; flex-wrap: wrap; align-items: center; }
+.city-card-header h2 { font-size: 22px; font-weight: 700; color: #0f172a; flex: 1; }
+.city-card-header p { font-size: 14px; color: #4b5563; margin-top: 4px; width: 100%; }
+.city-delete-btn { background: none; border: none; font-size: 20px; color: #9ca3af; cursor: pointer; padding: 0 6px; line-height: 1; border-radius: 4px; transition: color 0.15s, background 0.15s; }
+.city-delete-btn:hover { color: #dc2626; background: #fef2f2; }
 .chart-container { position: relative; height: 300px; margin-top: 16px; content-visibility: auto; contain-intrinsic-size: 300px; }
 .chart-placeholder { display: flex; align-items: center; justify-content: center; height: 100%; background: #f1f5f9; border-radius: 8px; color: #94a3b8; font-size: 14px; cursor: pointer; user-select: none; }
 .chart-placeholder:hover { background: #e2e8f0; color: #64748b; }
@@ -211,6 +214,22 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
 .compare-legend .legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 @media (max-width: 768px) { .compare-chart-container { height: 320px; } .compare-legend label { flex: 0 0 calc(50% - 10px); font-size: 12px; } }
 @media (max-width: 480px) { .compare-chart-container { height: 280px; } .compare-section { padding: 14px 10px; } .compare-section h2 { font-size: 16px; } .compare-legend { gap: 6px; } .compare-legend label { font-size: 11px; flex: 0 0 calc(50% - 6px); padding: 3px 6px; } }
+/* City Search Row */
+.city-search-row { display: flex; gap: 10px; margin: 0 0 20px 0; align-items: center; position: relative; }
+.city-search-input { flex: 1; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; color: #0f172a; outline: none; transition: border-color 0.2s; }
+.city-search-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.city-search-input::placeholder { color: #9ca3af; }
+.city-search-btn { padding: 10px 20px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+.city-search-btn:hover { background: #1d4ed8; }
+.city-search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.city-search-status { font-size: 13px; color: #6b7280; min-width: 60px; white-space: nowrap; }
+.city-search-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #d1d5db; border-radius: 8px; max-height: 220px; overflow-y: auto; z-index: 100; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; }
+.city-search-dropdown-item { padding: 12px 14px; cursor: pointer; font-size: 14px; color: #1f2937; border-bottom: 1px solid #f3f4f6; transition: background 0.15s; }
+.city-search-dropdown-item:last-child { border-bottom: none; }
+.city-search-dropdown-item:hover { background: #eff6ff; }
+.city-search-dropdown-item .dd-name { font-weight: 600; color: #0f172a; }
+.city-search-dropdown-item .dd-meta { font-size: 12px; color: #6b7280; margin-top: 2px; }
+@media (max-width: 480px) { .city-search-row { flex-wrap: wrap; } .city-search-input { flex: 1 1 100%; } .city-search-btn { flex: 0 0 auto; } }
 </style>
 </head>
 <body>
@@ -302,7 +321,13 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
 
 <div class="table-section">
     <h2>城市详情对比</h2>
-    
+    <div class="city-search-row" id="citySearchRow">
+        <input type="text" class="city-search-input" id="citySearchInput" placeholder="输入城市名称，如 New York" onkeydown="if(event.key==='Enter')searchCity()">
+        <button class="city-search-btn" id="citySearchBtn" onclick="searchCity()">添加城市</button>
+        <span class="city-search-status" id="citySearchStatus"></span>
+        <div class="city-search-dropdown" id="citySearchDropdown"></div>
+    </div>
+    <div id="cityCardsContainer">
         <div class="city-card" id="Los_Angeles">
             <div class="city-card-header">
                 <h2>Los Angeles</h2>
@@ -384,6 +409,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
                 <canvas id="chart_Boston"></canvas>
             </div>
         </div>
+    </div>
 </div>
 
 </div>
@@ -1163,6 +1189,7 @@ function mergeCache(cityKey, dailyMap, todayMMDD) {
 
 function getGlobalCacheUpdateTime() {
     var cityKeys = ['Los_Angeles', 'Seattle', 'Las_Vegas', 'Phoenix', 'Houston', 'Chicago', 'Atlanta', 'Miami', 'Boston'];
+    Object.keys(addedCities).forEach(function(k) { cityKeys.push(k); });
     var latest = null;
     for (var i = 0; i < cityKeys.length; i++) {
         var cached = readTempCache(cityKeys[i]);
@@ -1201,6 +1228,8 @@ async function refreshMonthlyData() {
     status.textContent = '';
 
     const cityKeys = CITY_LIST.map(c => c.key);
+    // Include added cities in refresh
+    Object.keys(addedCities).forEach(function(k) { if (cityKeys.indexOf(k) < 0) cityKeys.push(k); });
     const results = {};
     const dailyResults = {};
 
@@ -1236,7 +1265,11 @@ async function refreshMonthlyData() {
             }
         }
 
-        const coords = MONTHLY_CITY_COORDS[key];
+        var coords = MONTHLY_CITY_COORDS[key];
+        if (!coords && addedCities[key]) {
+            coords = { lat: addedCities[key].lat, lon: addedCities[key].lon };
+        }
+        if (!coords) { results[key] = null; dailyResults[key] = null; return; }
         const url = 'https://archive-api.open-meteo.com/v1/archive?latitude=' + coords.lat +
             '&longitude=' + coords.lon + '&start_date=2026-01-01&end_date=' + today +
             '&daily=temperature_2m_max&timezone=auto';
@@ -1396,16 +1429,33 @@ var COMPARE_COLORS = [
     '#60a5fa', '#f59e0b', '#ef4444', '#f97316', '#a78bfa',
     '#22d3ee', '#34d399', '#f472b6', '#e2e8f0'
 ];
+var COMPARE_COLORS_EXT = [
+    '#fb923c', '#818cf8', '#4ade80', '#facc15', '#14b8a6',
+    '#c084fc', '#fb7185', '#38bdf8', '#a3e635', '#e879f9',
+    '#fda4af', '#67e8f9', '#d8b4fe', '#fde68a', '#a7f3d0',
+    '#fca5a5'
+];
 var COMPARE_CITIES = ['Los_Angeles', 'Seattle', 'Las_Vegas', 'Phoenix', 'Houston', 'Chicago', 'Atlanta', 'Miami', 'Boston'];
 var COMPARE_LABELS = ['Los Angeles', 'Seattle', 'Las Vegas', 'Phoenix', 'Houston', 'Chicago', 'Atlanta', 'Miami', 'Boston'];
 var compareChart2026 = null;
+var MAX_EXTRA_CITIES = 10;
+var DEFAULT_CITY_KEYS = {'Los_Angeles':1,'Seattle':1,'Las_Vegas':1,'Phoenix':1,'Houston':1,'Chicago':1,'Atlanta':1,'Miami':1,'Boston':1};
+var ADDED_CITIES_KEY = 'weather_added_cities';
+var addedCities = {};
+var searchResults = [];
 
 function buildCompareDatasets() {
     var monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
     var datasets = [];
-    for (var i = 0; i < COMPARE_CITIES.length; i++) {
-        var cityData = getCityData(COMPARE_CITIES[i]);
-        var tempCache = readTempCache(COMPARE_CITIES[i]);
+    var allCityKeys = COMPARE_CITIES.slice();
+    Object.keys(addedCities).forEach(function(k) { allCityKeys.push(k); });
+    var allLabels = COMPARE_LABELS.slice();
+    Object.keys(addedCities).forEach(function(k) { allLabels.push(addedCities[k].label); });
+    var allColors = COMPARE_COLORS.slice();
+    Object.keys(addedCities).forEach(function(k, i) { allColors.push(addedCities[k].color); });
+    for (var i = 0; i < allCityKeys.length; i++) {
+        var cityData = getCityData(allCityKeys[i]);
+        var tempCache = readTempCache(allCityKeys[i]);
         var monthlyAvg = [null, null, null, null, null, null, null, null, null, null, null, null];
         var monthCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         if (cityData) {
@@ -1447,14 +1497,14 @@ function buildCompareDatasets() {
             }
         }
         datasets.push({
-            label: COMPARE_LABELS[i],
+            label: allLabels[i],
             data: monthlyAvg,
-            borderColor: COMPARE_COLORS[i],
-            backgroundColor: COMPARE_COLORS[i] + '20',
+            borderColor: allColors[i],
+            backgroundColor: allColors[i] + '20',
             borderWidth: 2,
             pointRadius: 3,
             pointHoverRadius: 5,
-            pointBackgroundColor: COMPARE_COLORS[i],
+            pointBackgroundColor: allColors[i],
             tension: 0.3,
             spanGaps: false,
             hidden: false
@@ -1507,6 +1557,8 @@ function initCompareChart() {
             }
         });
         renderCompareLegend();
+        // Restore previously added cities from localStorage
+        restoreAddedCities();
         window.chartInitDone['compare2026'] = true;
     }).catch(function(e) {
         console.warn('Compare chart init failed:', e.message);
@@ -1517,14 +1569,20 @@ function renderCompareLegend() {
     var legendDiv = document.getElementById('compareLegend');
     if (!legendDiv || !compareChart2026) return;
     legendDiv.innerHTML = '';
-    for (var i = 0; i < COMPARE_CITIES.length; i++) {
+    var allKeys = COMPARE_CITIES.slice();
+    Object.keys(addedCities).forEach(function(k) { allKeys.push(k); });
+    var allLabels = COMPARE_LABELS.slice();
+    Object.keys(addedCities).forEach(function(k) { allLabels.push(addedCities[k].label); });
+    var allColors = COMPARE_COLORS.slice();
+    Object.keys(addedCities).forEach(function(k) { allColors.push(addedCities[k].color); });
+    for (var i = 0; i < allKeys.length; i++) {
         (function(idx) {
             var label = document.createElement('label');
             var dot = document.createElement('span');
             dot.className = 'legend-dot';
-            dot.style.backgroundColor = COMPARE_COLORS[idx];
+            dot.style.backgroundColor = allColors[idx];
             label.appendChild(dot);
-            label.appendChild(document.createTextNode(COMPARE_LABELS[idx]));
+            label.appendChild(document.createTextNode(allLabels[idx]));
             label.addEventListener('click', function() {
                 var meta = compareChart2026.getDatasetMeta(idx);
                 meta.hidden = !meta.hidden;
@@ -1538,6 +1596,447 @@ function renderCompareLegend() {
             legendDiv.appendChild(label);
         })(i);
     }
+}
+
+// ============ Add City Search ============
+function normalizeCityKey(name) {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
+function searchCity() {
+    var input = document.getElementById('citySearchInput');
+    var btn = document.getElementById('citySearchBtn');
+    var status = document.getElementById('citySearchStatus');
+    var dropdown = document.getElementById('citySearchDropdown');
+    var query = input.value.trim();
+    if (!query) return;
+    if (Object.keys(addedCities).length >= MAX_EXTRA_CITIES) {
+        status.textContent = '已达上限 (' + MAX_EXTRA_CITIES + '个)';
+        return;
+    }
+    btn.disabled = true;
+    btn.textContent = '搜索中...';
+    status.textContent = '';
+    dropdown.style.display = 'none';
+    var url = 'https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(query) + '&count=5&language=en&format=json';
+    fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+        btn.disabled = false;
+        btn.textContent = '添加城市';
+        if (!data.results || !data.results.length) {
+            status.textContent = '未找到城市';
+            return;
+        }
+        if (data.results.length === 1) {
+            selectCityResult(data.results[0]);
+        } else {
+            searchResults = data.results;
+            showSearchDropdown(data.results);
+        }
+    }).catch(function(e) {
+        btn.disabled = false;
+        btn.textContent = '添加城市';
+        status.textContent = '搜索失败';
+    });
+}
+
+function showSearchDropdown(results) {
+    var dropdown = document.getElementById('citySearchDropdown');
+    dropdown.innerHTML = results.map(function(r, i) {
+        var name = r.name || '';
+        var country = r.country || '';
+        var admin1 = r.admin1 || '';
+        var meta = [admin1, country].filter(Boolean).join(', ');
+        return '<div class="city-search-dropdown-item" onclick="selectCityResult(searchResults[' + i + '])">' +
+            '<div class="dd-name">' + name + '</div>' +
+            (meta ? '<div class="dd-meta">' + meta + '</div>' : '') +
+            '</div>';
+    }).join('');
+    dropdown.style.display = 'block';
+    setTimeout(function() {
+        document.addEventListener('click', function closeDropdown(e) {
+            if (!dropdown.contains(e.target) && e.target !== document.getElementById('citySearchInput')) {
+                dropdown.style.display = 'none';
+                document.removeEventListener('click', closeDropdown);
+            }
+        });
+    }, 100);
+}
+
+function selectCityResult(result) {
+    var dropdown = document.getElementById('citySearchDropdown');
+    dropdown.style.display = 'none';
+    var baseKey = normalizeCityKey(result.name + (result.admin1 ? '_' + result.admin1 : ''));
+    var key = baseKey;
+    var counter = 1;
+    while (key in DEFAULT_CITY_KEYS || key in addedCities) {
+        if (key in addedCities) {
+            document.getElementById('citySearchStatus').textContent = '该城市已添加';
+            return;
+        }
+        if (key in DEFAULT_CITY_KEYS && counter === 1) {
+            document.getElementById('citySearchStatus').textContent = '该城市为默认城市';
+            return;
+        }
+        key = baseKey + '_' + counter;
+        counter++;
+    }
+    var label = result.name + (result.admin1 ? ', ' + result.admin1 : '') + (result.country ? ' (' + result.country + ')' : '');
+    document.getElementById('citySearchStatus').textContent = '获取数据...';
+    fetchCityData(key, label, result.latitude, result.longitude);
+}
+
+function fetchCityData(key, label, lat, lon) {
+    var today = '2026-06-18';
+    var url = 'https://archive-api.open-meteo.com/v1/archive?latitude=' + lat + '&longitude=' + lon +
+        '&start_date=2025-01-01&end_date=' + today +
+        '&daily=temperature_2m_mean&timezone=auto';
+    fetch(url).then(function(r) { return r.json(); }).then(function(json) {
+        if (json.daily && json.daily.temperature_2m_mean && json.daily.time) {
+            var temps = json.daily.temperature_2m_mean;
+            var dates = json.daily.time;
+            var dailyMap = {};
+            var dailyArr = [];
+            for (var i = 0; i < dates.length; i++) {
+                if (temps[i] != null) {
+                    dailyMap[dates[i].slice(5)] = temps[i];
+                    dailyArr.push({ date: dates[i], avg: temps[i] });
+                }
+            }
+            mergeCache(key, dailyMap, '06-18');
+            addCityToAll(key, label, dailyArr, dailyMap, lat, lon);
+        } else {
+            document.getElementById('citySearchStatus').textContent = '无数据';
+        }
+    }).catch(function() {
+        document.getElementById('citySearchStatus').textContent = '获取失败';
+    });
+}
+
+// Compute half-year (Jan-Jun) diff HTML for card header
+function computeHalfYearDiffHtml(dailyArr) {
+    var m25 = [0,0,0,0,0,0], c25 = [0,0,0,0,0,0];
+    var m26 = [0,0,0,0,0,0], c26 = [0,0,0,0,0,0];
+    dailyArr.forEach(function(d) {
+        var p = d.date.split('-');
+        if (p.length !== 3) return;
+        var y = parseInt(p[0]), mo = parseInt(p[1]) - 1;
+        if (mo < 0 || mo >= 6) return;
+        if (y === 2025) { m25[mo] += d.avg; c25[mo]++; }
+        else if (y === 2026) { m26[mo] += d.avg; c26[mo]++; }
+    });
+    var total25 = 0, total26 = 0, cnt = 0;
+    for (var i = 0; i < 6; i++) {
+        if (c25[i] > 0 && c26[i] > 0) {
+            total25 += m25[i] / c25[i];
+            total26 += m26[i] / c26[i];
+            cnt++;
+        }
+    }
+    if (cnt === 0) return '数据加载中...';
+    var avgDiff = (total26 - total25) / cnt;
+    var direction = avgDiff >= 0 ? '偏高' : '偏低';
+    var cls = avgDiff > 0.05 ? 'warming' : (avgDiff < -0.05 ? 'cooling' : '');
+    var sign = avgDiff >= 0 ? '+' : '';
+    return '2026年上半年比2025年同期平均' + direction + ' <span class="' + cls + '">' + sign + avgDiff.toFixed(1) + '℃</span>';
+}
+
+function addCityToAll(key, label, dailyArr, dailyMap, lat, lon) {
+    var colorIdx = Object.keys(addedCities).length;
+    var color = COMPARE_COLORS_EXT[colorIdx % COMPARE_COLORS_EXT.length];
+    addedCities[key] = { label: label, color: color, dailyArr: dailyArr, dailyMap: dailyMap, lat: lat, lon: lon };
+
+    // Compute half-year diff text for card header
+    var diffHtml = computeHalfYearDiffHtml(dailyArr);
+    // 1. Create city card
+    createCityCard(key, label, diffHtml);
+    // 2. Add nav button
+    addNavButton(key, label);
+    // 3. Add to compare chart
+    addToCompareChart(key, label, color, dailyMap);
+    // 4. Add to monthly table
+    addToMonthlyTable(key, label, dailyArr);
+    // 5. Store CITY_DATA_RAW entry
+    storeCityDataRaw(key, dailyArr);
+    // 6. Persist
+    saveAddedCities();
+
+    document.getElementById('citySearchStatus').textContent = '已添加';
+    document.getElementById('citySearchInput').value = '';
+    setTimeout(function() { document.getElementById('citySearchStatus').textContent = ''; }, 2000);
+}
+
+function createCityCard(key, label, diffHtml) {
+    var container = document.getElementById('cityCardsContainer');
+    var card = document.createElement('div');
+    card.className = 'city-card';
+    card.id = key;
+    diffHtml = diffHtml || '数据加载中...';
+    card.innerHTML = '<div class="city-card-header"><h2>' + label + '</h2><button class="city-delete-btn" onclick="deleteCity(\'' + key + '\')" title="删除此城市">&times;</button>' +
+        '<p>' + diffHtml + '</p></div>' +
+        '<div class="chart-container"><canvas id="chart_' + key + '"></canvas></div>';
+    // Insert before closing of container (append as last card)
+    container.appendChild(card);
+    // Set up IntersectionObserver for lazy loading
+    if ('IntersectionObserver' in window && window.chartObserver) {
+        window.chartObserver.observe(card);
+    } else {
+        // Fallback: init after short delay
+        setTimeout(function() { initCityChart(key); }, 500);
+    }
+    // Add to CITY_LIST for refreshMonthlyData compatibility
+    CITY_LIST.push({ key: key, display: label });
+    cityIndexMap[key] = CITY_LIST.length - 1;
+}
+
+function addNavButton(key, label) {
+    var container = document.querySelector('.nav-bar');
+    if (!container) return;
+    var lastSep = container.querySelector('.nav-sep:last-of-type');
+    var btn = document.createElement('button');
+    btn.textContent = label;
+    btn.setAttribute('data-city-key', key);
+    btn.onclick = function() { scrollToCity(key); };
+    if (lastSep) {
+        container.insertBefore(btn, lastSep);
+    } else {
+        container.appendChild(btn);
+    }
+}
+
+function addToCompareChart(key, label, color, dailyMap) {
+    if (!compareChart2026) return;
+    // Aggregate by month
+    var monthlyAvg = [null, null, null, null, null, null, null, null, null, null, null, null];
+    var monthCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    Object.keys(dailyMap).forEach(function(mmdd) {
+        if (dailyMap[mmdd] == null) return;
+        var parts = mmdd.split('-');
+        if (parts[0] !== '2026') return;
+        var m = parseInt(parts[1]) - 1;
+        if (m >= 0 && m < 12) {
+            monthlyAvg[m] = (monthlyAvg[m] || 0) + dailyMap[mmdd];
+            monthCounts[m]++;
+        }
+    });
+    for (var m = 0; m < 12; m++) {
+        if (monthCounts[m] > 0) monthlyAvg[m] = parseFloat((monthlyAvg[m] / monthCounts[m]).toFixed(1));
+    }
+    var dsIndex = compareChart2026.data.datasets.length;
+    compareChart2026.data.datasets.push({
+        label: label,
+        data: monthlyAvg,
+        borderColor: color,
+        backgroundColor: color + '20',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        pointBackgroundColor: color,
+        tension: 0.3,
+        spanGaps: false,
+        hidden: false
+    });
+    compareChart2026.update();
+    // Add legend item
+    addLegendItem(key, label, color, dsIndex);
+}
+
+function addLegendItem(key, label, color, dsIndex) {
+    var legendDiv = document.getElementById('compareLegend');
+    if (!legendDiv) return;
+    var labelEl = document.createElement('label');
+    labelEl.setAttribute('data-city-key', key);
+    var dot = document.createElement('span');
+    dot.className = 'legend-dot';
+    dot.style.backgroundColor = color;
+    labelEl.appendChild(dot);
+    labelEl.appendChild(document.createTextNode(label));
+    labelEl.addEventListener('click', function() {
+        var meta = compareChart2026.getDatasetMeta(dsIndex);
+        meta.hidden = !meta.hidden;
+        if (meta.hidden) { labelEl.classList.add('legend-off'); }
+        else { labelEl.classList.remove('legend-off'); }
+        compareChart2026.update();
+    });
+    legendDiv.appendChild(labelEl);
+}
+
+function addToMonthlyTable(key, label, dailyArr) {
+    var tbody = document.querySelector('#monthlyTable tbody');
+    if (!tbody) return;
+    // Compute 2025 and 2026 monthly averages
+    var m2025 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    var c2025 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    var m2026 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    var c2026 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    dailyArr.forEach(function(d) {
+        var parts = d.date.split('-');
+        var yr = parseInt(parts[0]);
+        var mo = parseInt(parts[1]) - 1;
+        if (yr === 2025) { m2025[mo] += d.avg; c2025[mo]++; }
+        else if (yr === 2026) { m2026[mo] += d.avg; c2026[mo]++; }
+    });
+    // Build row (only Jan-Jun for display)
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td class="city-name"><a href="#' + key + '" onclick="scrollToCity(\'' + key + '\')">' + label + '</a></td>';
+    var totalDiff = 0;
+    for (var mo = 0; mo < 6; mo++) {
+        var v25 = c2025[mo] > 0 ? m2025[mo] / c2025[mo] : 0;
+        var v26 = c2026[mo] > 0 ? m2026[mo] / c2026[mo] : v25;
+        var diff = v26 - v25;
+        totalDiff += diff;
+        var diffClass = diff > 0.05 ? 'warming' : (diff < -0.05 ? 'cooling' : 'neutral-diff');
+        var diffSign = diff >= 0 ? '+' : '';
+        var td = document.createElement('td');
+        td.innerHTML = '<span class="cell-2025">' + v25.toFixed(1) + '</span> ' +
+            '<span class="arrow">&rarr;</span> ' +
+            '<span class="cell-2026">' + v26.toFixed(1) + '</span><br>' +
+            '<span class="diff-badge ' + diffClass + '">' + diffSign + diff.toFixed(1) + '℃</span>';
+        tr.appendChild(td);
+    }
+    var avgDiff = totalDiff / 6;
+    var trendClass = avgDiff > 0.05 ? 'warming' : (avgDiff < -0.05 ? 'cooling' : 'neutral-diff');
+    var trendArrow = avgDiff > 0.05 ? '▲' : (avgDiff < -0.05 ? '▼' : '─');
+    var trendTd = document.createElement('td');
+    trendTd.className = 'trend-cell';
+    trendTd.innerHTML = '<span class="' + trendClass + '">' + trendArrow + ' ' +
+        (avgDiff >= 0 ? '+' : '') + avgDiff.toFixed(1) + '℃</span>';
+    tr.appendChild(trendTd);
+    tbody.appendChild(tr);
+}
+
+function storeCityDataRaw(key, dailyArr) {
+    // Build the same structure as CITY_DATA_RAW: { h25: [...], h26: [...], dates: [...], diff: [...] }
+    // Align 2025 and 2026 data by MM-DD so Chart.js can use single dates[] labels
+    var dateMap2025 = {};
+    var dateMap2026 = {};
+    dailyArr.forEach(function(d) {
+        var mmdd = d.date.slice(5);
+        if (d.date.startsWith('2025-')) { dateMap2025[mmdd] = d.avg; }
+        else if (d.date.startsWith('2026-')) { dateMap2026[mmdd] = d.avg; }
+    });
+    // Build ordered unique dates (all MM-DD values from both years, sorted)
+    var dates = [];
+    var seen = {};
+    [dateMap2025, dateMap2026].forEach(function(map) {
+        Object.keys(map).forEach(function(mmdd) {
+            if (!seen[mmdd]) { seen[mmdd] = true; dates.push(mmdd); }
+        });
+    });
+    dates.sort();
+    // Build parallel arrays
+    var h25 = dates.map(function(mmdd) {
+        return dateMap2025[mmdd] != null ? dateMap2025[mmdd] : null;
+    });
+    var h26 = dates.map(function(mmdd) {
+        return dateMap2026[mmdd] != null ? dateMap2026[mmdd] : null;
+    });
+    // Compute diff (2026 - 2025 where both exist)
+    var diff = dates.map(function(mmdd, i) {
+        if (h25[i] !== null && h26[i] !== null) return parseFloat((h26[i] - h25[i]).toFixed(1));
+        return null;
+    });
+    // Store in CITY_DATA_CACHE so getCityData() can find it
+    CITY_DATA_CACHE[key] = { h25: h25, h26: h26, dates: dates, diff: diff };
+}
+
+function saveAddedCities() {
+    var data = {};
+    Object.keys(addedCities).forEach(function(key) {
+        data[key] = { label: addedCities[key].label, color: addedCities[key].color, lat: addedCities[key].lat, lon: addedCities[key].lon, dailyArr: addedCities[key].dailyArr };
+    });
+    try { localStorage.setItem(ADDED_CITIES_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+function deleteCity(key) {
+    if (!confirm('确定要删除城市 "' + (addedCities[key] ? addedCities[key].label : key) + '" 吗？此操作不可撤销。')) return;
+
+    try {
+        // 1. Remove from DOM - city card
+        var card = document.getElementById(key);
+        if (card) card.remove();
+
+        // 2. Remove nav button
+        var navBtn = document.querySelector('.nav-bar button[data-city-key="' + key + '"]');
+        if (navBtn) navBtn.remove();
+
+        // 3. Remove from monthly table
+        var tableLink = document.querySelector('#monthlyTable a[href="#' + key + '"]');
+        if (tableLink) {
+            var tr = tableLink.closest('tr');
+            if (tr) tr.remove();
+        }
+
+        // 4. Remove from compare chart datasets (find by label)
+        if (compareChart2026 && addedCities[key]) {
+            var cityLabel = addedCities[key].label;
+            var datasets = compareChart2026.data.datasets;
+            for (var i = datasets.length - 1; i >= 0; i--) {
+                if (datasets[i].label === cityLabel) {
+                    datasets.splice(i, 1);
+                    break;
+                }
+            }
+            compareChart2026.update();
+        }
+
+        // 5. Remove legend item
+        var legendItem = document.querySelector('#compareLegend label[data-city-key="' + key + '"]');
+        if (legendItem) legendItem.remove();
+
+        // 6. Remove chart instance and clean up canvas
+        if (window.chartInstances && window.chartInstances[key]) {
+            window.chartInstances[key].destroy();
+            delete window.chartInstances[key];
+        }
+        if (window.chartInitDone) delete window.chartInitDone[key];
+        if (window.chartLoading) delete window.chartLoading[key];
+
+        // 7. Remove from CITY_DATA_CACHE
+        if (CITY_DATA_CACHE) delete CITY_DATA_CACHE[key];
+
+        // 8. Remove from CITY_LIST and rebuild index map
+        CITY_LIST = CITY_LIST.filter(function(c) { return c.key !== key; });
+        cityIndexMap = {};
+        CITY_LIST.forEach(function(c, i) { cityIndexMap[c.key] = i; });
+    } finally {
+        // 9. Remove from addedCities (always run to prevent ghost restoration)
+        delete addedCities[key];
+
+        // 10. Persist to localStorage (always run)
+        saveAddedCities();
+
+        // 11. Clear weather cache (always run)
+        try { localStorage.removeItem(TEMP_CACHE_PREFIX + key); } catch(e) {}
+    }
+}
+
+function restoreAddedCities() {
+    try {
+        var raw = localStorage.getItem(ADDED_CITIES_KEY);
+        if (!raw) return;
+        var data = JSON.parse(raw);
+        // Discard non-object or empty data (including null, empty arrays, empty objects)
+        if (!data || typeof data !== 'object' || Array.isArray(data) || Object.keys(data).length === 0) return;
+        Object.keys(data).forEach(function(key) {
+            // Skip silently if key not own property or points to invalid entry
+            if (!data.hasOwnProperty(key)) return;
+            if (key in DEFAULT_CITY_KEYS) return;
+            if (key in addedCities) return;
+            if (Object.keys(addedCities).length >= MAX_EXTRA_CITIES) return;
+            var entry = data[key];
+            // Validate: must have label, lat, lon, and non-empty dailyArr
+            if (!entry || !entry.label || entry.lat == null || entry.lon == null) return;
+            if (!entry.dailyArr || !Array.isArray(entry.dailyArr) || entry.dailyArr.length === 0) return;
+            // Build dailyMap from stored dailyArr
+            var dailyMap = {};
+            entry.dailyArr.forEach(function(d) {
+                if (d && d.avg != null && d.date) {
+                    dailyMap[d.date.slice(5)] = d.avg;
+                }
+            });
+            addCityToAll(key, entry.label, entry.dailyArr, dailyMap, entry.lat, entry.lon);
+        });
+    } catch(e) {}
 }
 
 // Init compare chart on load (after chartjs available, deferred to not block critical path)
