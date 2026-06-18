@@ -276,6 +276,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
         <canvas id="compareChart2026"></canvas>
     </div>
     <div class="compare-legend" id="compareLegend"></div>
+    <div class="cache-status" id="cacheStatus" style="text-align:center;font-size:11px;color:#94a3b8;margin-top:8px;display:none;"></div>
 </div>
 
 <div class="table-section" id="monthly-table">
@@ -508,6 +509,8 @@ const DEFAULT_ICON = '\u2601\uFE0F';
 const CACHE_KEY = 'weather_dashboard_cache';
 const CACHE_DURATION = 30 * 60 * 1000;
 const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000;
+const TEMP_CACHE_PREFIX = 'weather_cache_';
+const TEMP_CACHE_TODAY_TTL = 2 * 60 * 60 * 1000;
 
 function getWeatherIcon(code) {
     return WMO_ICONS[code] || DEFAULT_ICON;
@@ -1095,14 +1098,106 @@ function getDayIndex(mmdd) {
     return daysBeforeMonth[m - 1] + d - 1;
 }
 
+// ============ Temperature Cache Utilities ============
+function readTempCache(cityKey) {
+    try {
+        var raw = localStorage.getItem(TEMP_CACHE_PREFIX + cityKey);
+        if (!raw) return null;
+        var parsed = JSON.parse(raw);
+        if (!parsed || !parsed.daily || typeof parsed.daily !== 'object') return null;
+        return parsed;
+    } catch(e) { return null; }
+}
+
+function writeTempCache(cityKey, cacheData) {
+    try {
+        localStorage.setItem(TEMP_CACHE_PREFIX + cityKey, JSON.stringify(cacheData));
+    } catch(e) { /* quota exceeded, silently degrade */ }
+}
+
+function getCacheCoverage(cached, todayMMDD) {
+    var daily = cached.daily;
+    var now = Date.now();
+    var allPastCached = true;
+    var missingDates = [];
+    var todayParts = todayMMDD.split('-');
+    var todayM = parseInt(todayParts[0]);
+    var todayD = parseInt(todayParts[1]);
+    for (var m = 1; m <= todayM; m++) {
+        var endD = (m === todayM) ? todayD : new Date(2026, m, 0).getDate();
+        for (var d = 1; d <= endD; d++) {
+            var mmdd = String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+            if (!(mmdd in daily) || daily[mmdd] === null || daily[mmdd] === undefined) {
+                allPastCached = false;
+                missingDates.push(mmdd);
+            }
+        }
+    }
+    var todayCached = (todayMMDD in daily) && daily[todayMMDD] != null;
+    var todayFresh = todayCached;
+    if (todayCached && cached.lastUpdated) {
+        var lastUpdatedTs = new Date(cached.lastUpdated).getTime();
+        if (now - lastUpdatedTs > TEMP_CACHE_TODAY_TTL) todayFresh = false;
+    }
+    var allCached = allPastCached && todayCached && todayFresh;
+    return { allPastCached: allPastCached, todayCached: todayCached, todayFresh: todayFresh, allCached: allCached, missingDates: missingDates };
+}
+
+function mergeCache(cityKey, dailyMap, todayMMDD) {
+    var cached = readTempCache(cityKey) || { lastUpdated: new Date().toISOString(), daily: {} };
+    var now = new Date();
+    var todayParts = todayMMDD.split('-');
+    var todayM = parseInt(todayParts[0]);
+    var todayD = parseInt(todayParts[1]);
+    Object.keys(dailyMap).forEach(function(mmdd) {
+        var parts = mmdd.split('-');
+        var m = parseInt(parts[0]);
+        var d = parseInt(parts[1]);
+        var isPast = (m < todayM) || (m === todayM && d < todayD);
+        if (isPast || mmdd === todayMMDD) cached.daily[mmdd] = dailyMap[mmdd];
+    });
+    cached.lastUpdated = now.toISOString();
+    writeTempCache(cityKey, cached);
+    return cached;
+}
+
+function getGlobalCacheUpdateTime() {
+    var cityKeys = ['Los_Angeles', 'Seattle', 'Las_Vegas', 'Phoenix', 'Houston', 'Chicago', 'Atlanta', 'Miami', 'Boston'];
+    var latest = null;
+    for (var i = 0; i < cityKeys.length; i++) {
+        var cached = readTempCache(cityKeys[i]);
+        if (cached && cached.lastUpdated) {
+            var ts = new Date(cached.lastUpdated).getTime();
+            if (!latest || ts > latest) latest = ts;
+        }
+    }
+    return latest;
+}
+
+function updateCacheStatusDisplay() {
+    var el = document.getElementById('cacheStatus');
+    if (!el) return;
+    var latest = getGlobalCacheUpdateTime();
+    if (latest) {
+        var d = new Date(latest);
+        var dateStr = d.getFullYear() + '\u5E74' + (d.getMonth() + 1) + '\u6708' + d.getDate() + '\u65E5 ' +
+            String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        el.textContent = '\u7F13\u5B58\u6570\u636E\uFF1A\u6700\u540E\u66F4\u65B0\u4E8E ' + dateStr;
+        el.style.display = '';
+    } else {
+        el.style.display = 'none';
+    }
+}
+
 async function refreshMonthlyData() {
     const btn = document.getElementById('monthlyRefreshBtn');
     const status = document.getElementById('monthlyRefreshStatus');
     const now = new Date();
     const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    const todayMMDDPadded = String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
 
     btn.disabled = true;
-    btn.textContent = '加载中...';
+    btn.textContent = '\u52A0\u8F7D\u4E2D...';
     status.textContent = '';
 
     const cityKeys = CITY_LIST.map(c => c.key);
@@ -1110,6 +1205,37 @@ async function refreshMonthlyData() {
     const dailyResults = {};
 
     const fetches = cityKeys.map(async (key) => {
+        // Check cache coverage first
+        var cached = readTempCache(key);
+        if (cached) {
+            var coverage = getCacheCoverage(cached, todayMMDDPadded);
+            if (coverage.allCached) {
+                // All data cached — use cache, skip API
+                var cachedDaily = {};
+                Object.keys(cached.daily).forEach(function(mmdd) {
+                    if (cached.daily[mmdd] != null) cachedDaily[mmdd] = cached.daily[mmdd];
+                });
+                var cachedMonthly = {};
+                Object.keys(cachedDaily).forEach(function(mmdd) {
+                    var m = parseInt(mmdd.split('-')[0]);
+                    if (!cachedMonthly[m]) cachedMonthly[m] = { sum: 0, count: 0 };
+                    cachedMonthly[m].sum += cachedDaily[mmdd];
+                    cachedMonthly[m].count++;
+                });
+                var cachedAvgs = [];
+                for (var cm = 1; cm <= 6; cm++) {
+                    if (cachedMonthly[cm] && cachedMonthly[cm].count > 0) {
+                        cachedAvgs.push(cachedMonthly[cm].sum / cachedMonthly[cm].count);
+                    } else {
+                        cachedAvgs.push(null);
+                    }
+                }
+                results[key] = cachedAvgs;
+                dailyResults[key] = cachedDaily;
+                return;
+            }
+        }
+
         const coords = MONTHLY_CITY_COORDS[key];
         const url = 'https://archive-api.open-meteo.com/v1/archive?latitude=' + coords.lat +
             '&longitude=' + coords.lon + '&start_date=2026-01-01&end_date=' + today +
@@ -1134,6 +1260,8 @@ async function refreshMonthlyData() {
                         monthly[m].count++;
                     }
                 }
+                // Merge with cache
+                mergeCache(key, dailyMap, todayMMDDPadded);
                 const avgs = [];
                 for (let m = 1; m <= 6; m++) {
                     if (monthly[m] && monthly[m].count > 0) {
@@ -1150,8 +1278,33 @@ async function refreshMonthlyData() {
             }
         } catch (e) {
             console.warn('Archive fetch failed for ' + key + ':', e.message);
-            results[key] = null;
-            dailyResults[key] = null;
+            // Fallback to cache on failure
+            if (cached) {
+                var fbDaily = {};
+                Object.keys(cached.daily).forEach(function(mmdd) {
+                    if (cached.daily[mmdd] != null) fbDaily[mmdd] = cached.daily[mmdd];
+                });
+                var fbMonthly = {};
+                Object.keys(fbDaily).forEach(function(mmdd) {
+                    var m = parseInt(mmdd.split('-')[0]);
+                    if (!fbMonthly[m]) fbMonthly[m] = { sum: 0, count: 0 };
+                    fbMonthly[m].sum += fbDaily[mmdd];
+                    fbMonthly[m].count++;
+                });
+                var fbAvgs = [];
+                for (var fbm = 1; fbm <= 6; fbm++) {
+                    if (fbMonthly[fbm] && fbMonthly[fbm].count > 0) {
+                        fbAvgs.push(fbMonthly[fbm].sum / fbMonthly[fbm].count);
+                    } else {
+                        fbAvgs.push(null);
+                    }
+                }
+                results[key] = fbAvgs;
+                dailyResults[key] = fbDaily;
+            } else {
+                results[key] = null;
+                dailyResults[key] = null;
+            }
         }
     });
 
@@ -1214,6 +1367,9 @@ async function refreshMonthlyData() {
     // Update charts (existing + future lazy-loaded)
     cityKeys.forEach(key => { applyRefreshedDailyData(key); });
 
+    // Update cache status display
+    updateCacheStatusDisplay();
+
     const updateTime = new Date();
     const timeStr = String(updateTime.getHours()).padStart(2, '0') + ':' + String(updateTime.getMinutes()).padStart(2, '0');
     status.textContent = '已更新 ' + timeStr;
@@ -1249,18 +1405,38 @@ function buildCompareDatasets() {
     var datasets = [];
     for (var i = 0; i < COMPARE_CITIES.length; i++) {
         var cityData = getCityData(COMPARE_CITIES[i]);
+        var tempCache = readTempCache(COMPARE_CITIES[i]);
         var monthlyAvg = [null, null, null, null, null, null, null, null, null, null, null, null];
         var monthCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         if (cityData) {
             for (var j = 0; j < cityData.dates.length; j++) {
                 var d = cityData.dates[j];
                 var val = cityData.h26[j];
-                if (val === null || val === 'null' || val === undefined) continue;
+                if (val === null || val === 'null' || val === undefined) {
+                    // Try cache fallback for missing static data
+                    if (tempCache && tempCache.daily && tempCache.daily[d] != null) {
+                        val = tempCache.daily[d];
+                    } else {
+                        continue;
+                    }
+                }
                 var monthIdx = parseInt(d.substring(0, 2), 10) - 1;
                 if (monthIdx >= 0 && monthIdx < 12) {
                     monthlyAvg[monthIdx] = (monthlyAvg[monthIdx] || 0) + parseFloat(val);
                     monthCounts[monthIdx]++;
                 }
+            }
+            // Also check cache for dates not present in static cityData.dates
+            if (tempCache && tempCache.daily) {
+                Object.keys(tempCache.daily).forEach(function(mmdd) {
+                    if (tempCache.daily[mmdd] == null) return;
+                    if (cityData.dates.indexOf(mmdd) >= 0) return;
+                    var monthIdx = parseInt(mmdd.substring(0, 2), 10) - 1;
+                    if (monthIdx >= 0 && monthIdx < 12) {
+                        monthlyAvg[monthIdx] = (monthlyAvg[monthIdx] || 0) + parseFloat(tempCache.daily[mmdd]);
+                        monthCounts[monthIdx]++;
+                    }
+                });
             }
             for (var m = 0; m < 12; m++) {
                 if (monthCounts[m] > 0) {
@@ -1366,6 +1542,8 @@ function renderCompareLegend() {
 
 // Init compare chart on load (after chartjs available, deferred to not block critical path)
 setTimeout(initCompareChart, 1000);
+// Update cache status on load
+setTimeout(updateCacheStatusDisplay, 2000);
 </script>
 
 </body>
