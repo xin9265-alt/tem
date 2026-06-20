@@ -18,9 +18,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
 .header { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #2563eb 100%); color: #fff; padding: 40px 48px; }
 .header h1 { font-size: 28px; font-weight: 700; letter-spacing: 0.5px; }
 .header .subtitle { font-size: 14px; opacity: 0.8; margin-top: 8px; }
-.nav-bar { background: #fff; padding: 10px 48px; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 2000; box-shadow: 0 1px 3px rgba(0,0,0,0.06); justify-content: space-between; align-items: center; }
-.nav-left { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.nav-search { display: flex; gap: 6px; align-items: center; position: relative; }
+.nav-bar { background: #fff; padding: 10px 48px; display: flex; flex-wrap: nowrap; gap: 8px; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 2000; box-shadow: 0 1px 3px rgba(0,0,0,0.06); justify-content: space-between; align-items: center; overflow: hidden; }
+.nav-left { display: flex; flex-wrap: nowrap; gap: 8px; align-items: center; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.nav-left::-webkit-scrollbar { display: none; }
+.nav-search { display: flex; gap: 6px; align-items: center; position: relative; flex-shrink: 0; }
 .nav-search-input { width: 180px; padding: 7px 12px; border: 1px solid #d1d5db; border-radius: 20px; font-size: 13px; color: #0f172a; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
 .nav-search-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
 .nav-search-input::placeholder { color: #9ca3af; }
@@ -29,7 +30,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
 .nav-search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .nav-search-status { font-size: 12px; color: #6b7280; white-space: nowrap; min-width: 50px; }
 .nav-search .city-search-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #d1d5db; border-radius: 8px; max-height: 220px; overflow-y: auto; z-index: 100; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; }
-.nav-bar button { padding: 8px 18px; border: 1px solid #d1d5db; background: #fff; border-radius: 20px; cursor: pointer; font-size: 13px; color: #374151; transition: all 0.2s; white-space: nowrap; }
+.nav-bar button { padding: 8px 18px; border: 1px solid #d1d5db; background: #fff; border-radius: 20px; cursor: pointer; font-size: 13px; color: #374151; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
 .nav-bar button:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
 .nav-shortcut { background: #f1f5f9 !important; color: #475569 !important; border-color: #e2e8f0 !important; font-weight: 500 !important; }
 .nav-shortcut:hover { background: #475569 !important; color: #fff !important; border-color: #475569 !important; }
@@ -55,6 +56,7 @@ th:hover { background: #eff6ff; }
 th .sort-icon { margin-left: 4px; font-size: 10px; }
 td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
 .city-name { text-align: left; font-weight: 600; }
+.country-code { font-weight: 600; color: #6b7280; }
 .city-name a { color: #2563eb; text-decoration: none; }
 .city-name a:hover { text-decoration: underline; }
 .cell-2025 { color: #2563eb; font-weight: 500; }
@@ -133,11 +135,8 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
     .kpi-card .kpi-label { font-size: 10px; margin-bottom: 4px; }
     .kpi-card .kpi-value { font-size: 26px; }
     .kpi-card .kpi-detail { font-size: 11px; }
-    .nav-bar { padding: 8px 12px; gap: 8px; flex-wrap: wrap; }
-    .nav-left { display: flex; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 6px; width: 100%; }
-    .nav-left::-webkit-scrollbar { display: none; }
-    .nav-search { width: 100%; display: flex; gap: 6px; align-items: center; }
-    .nav-search-input { flex: 1; min-width: 0; }
+    .nav-bar { padding: 8px 12px; gap: 8px; }
+    .nav-search-input { width: 100px; min-width: 0; }
     .nav-search .city-search-dropdown { left: 0; right: 0; }
     .nav-bar button { padding: 6px 14px; font-size: 12px; flex-shrink: 0; }
     .nav-shortcut { padding: 6px 10px !important; font-size: 11px !important; }
@@ -181,8 +180,8 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
     .kpi-card .kpi-value { font-size: 22px; }
     .kpi-card .kpi-detail { font-size: 10px; }
     .nav-bar { padding: 6px 8px; gap: 6px; }
-    .nav-search-input { width: auto; }
-    .nav-bar button { padding: 5px 10px; font-size: 11px; }
+    .nav-search-input { width: 80px; min-width: 0; }
+    .nav-bar button { padding: 5px 10px; font-size: 11px; flex-shrink: 0; }
     .nav-shortcut { padding: 5px 8px !important; font-size: 10px !important; }
     .nav-sep { font-size: 11px; margin: 0; }
     .table-section { padding: 10px 6px; }
@@ -316,14 +315,15 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
     <table id="monthlyTable">
         <thead>
             <tr>
-                <th onclick="sortTable(0)">城市 <span class="sort-icon">▲▼</span></th>
-                <th onclick="sortTable(1)">1月 <span class="sort-icon">▲▼</span></th>
-                <th onclick="sortTable(2)">2月 <span class="sort-icon">▲▼</span></th>
-                <th onclick="sortTable(3)">3月 <span class="sort-icon">▲▼</span></th>
-                <th onclick="sortTable(4)">4月 <span class="sort-icon">▲▼</span></th>
-                <th onclick="sortTable(5)">5月 <span class="sort-icon">▲▼</span></th>
-                <th onclick="sortTable(6)">6月 <span class="sort-icon">▲▼</span></th>
-                <th onclick="sortTable(7)">上半年趋势 <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(0)">国家 <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(1)">城市 <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(2)">上半年趋势 <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(3)">1月 <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(4)">2月 <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(5)">3月 <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(6)">4月 <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(7)">5月 <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(8)">6月 <span class="sort-icon">▲▼</span></th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -495,28 +495,28 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
 <script>
 let CITY_LIST = [{"key": "Los_Angeles", "display": "Los Angeles"}, {"key": "Seattle", "display": "Seattle"}, {"key": "Las_Vegas", "display": "Las Vegas"}, {"key": "Phoenix", "display": "Phoenix"}, {"key": "Houston", "display": "Houston"}, {"key": "Chicago", "display": "Chicago"}, {"key": "Atlanta", "display": "Atlanta"}, {"key": "Miami", "display": "Miami"}, {"key": "Boston", "display": "Boston"}, {"key": "Berlin", "display": "Berlin"}, {"key": "Ludwigslust", "display": "Ludwigslust"}, {"key": "Calgary", "display": "Calgary"}, {"key": "London", "display": "London"}, {"key": "Morayfield", "display": "Morayfield"}, {"key": "Dubai", "display": "Dubai"}];
 var MONTHLY_TABLE_DATA = [
-    ["Los_Angeles", [19.6,20.0,20.3,23.5,27.2,28.5], [20.3,22.0,28.7,24.6,24.9,27.3], "warming", "+1.3"],
-    ["Seattle",     [6.8,7.6,11.8,14.9,18.1,22.3], [8.7,9.6,10.7,14.9,19.5,20.3], "warming", "+0.6"],
-    ["Las_Vegas",   [14.1,19.9,22.1,27.3,32.7,39.2], [16.5,20.9,29.9,27.1,33.1,39.2], "warming", "+1.5"],
-    ["Phoenix",     [17.8,24.5,24.4,29.3,34.2,40.6], [20.8,25.6,32.9,30.8,34.7,40.3], "warming", "+2.6"],
-    ["Houston",     [13.5,19.4,24.9,27.5,29.9,31.6], [17.8,23.0,26.1,26.5,28.4,29.3], "warming", "+0.5"],
-    ["Chicago",     [-1.8,0.4,11.0,14.1,17.4,27.0],  [-2.1,4.3,11.0,16.3,19.7,24.2],  "warming", "+0.6"],
-    ["Atlanta",     [8.1,15.6,19.6,24.7,26.2,30.6],  [11.0,14.8,21.8,25.5,26.2,27.3], "warming", "+0.1"],
-    ["Miami",       [23.2,26.0,26.3,27.5,30.3,30.0], [23.3,23.3,25.9,26.9,30.3,29.3], "cooling", "-0.7"],
-    ["Boston",      [0.4,1.6,9.8,14.6,18.8,25.4],    [0.4,0.2,9.4,13.9,20.8,26.8],    "cooling", "-0.9"],
-    ["Berlin",      [2.2, 0.6, 6.2, 12.0, 13.8, 19.7],    [-2.2, 0.8, 7.1, 9.4, 15.4, 17.4],    "cooling", "-1.1"],
-    ["Ludwigslust",  [2.0, 1.4, 5.7, 10.6, 13.1, 17.8],    [-1.6, 0.2, 6.4, 8.2, 14.0, 16.0],    "cooling", "-1.2"],
-    ["Calgary",      [-5.7, -13.1, -0.4, 4.8, 12.3, 15.1],   [-4.1, -4.3, -2.6, 1.9, 13.0, 11.8],   "warming", "+0.5"],
-    ["London",       [4.1, 5.4, 8.2, 12.3, 15.1, 19.5],       [5.2, 8.0, 8.9, 12.1, 16.4, 16.1],     "warming", "+0.8"],
-    ["Morayfield",   [24.5, 24.5, 23.7, 20.8, 18.4, 14.8],    [24.9, 24.2, 23.0, 20.8, 18.6, 16.3],  "warming", "+0.1"],
-    ["Dubai",        [18.8, 20.8, 23.8, 29.0, 32.1, 33.3],    [19.1, 21.7, 23.9, 25.2, 31.1, 33.4],  "cooling", "-0.6"]
+    ["US", "Los_Angeles", [19.6,20.0,20.3,23.5,27.2,28.5], [20.3,22.0,28.7,24.6,24.9,27.3], "warming", "+1.3"],
+    ["US", "Seattle",     [6.8,7.6,11.8,14.9,18.1,22.3], [8.7,9.6,10.7,14.9,19.5,20.3], "warming", "+0.6"],
+    ["US", "Las_Vegas",   [14.1,19.9,22.1,27.3,32.7,39.2], [16.5,20.9,29.9,27.1,33.1,39.2], "warming", "+1.5"],
+    ["US", "Phoenix",     [17.8,24.5,24.4,29.3,34.2,40.6], [20.8,25.6,32.9,30.8,34.7,40.3], "warming", "+2.6"],
+    ["US", "Houston",     [13.5,19.4,24.9,27.5,29.9,31.6], [17.8,23.0,26.1,26.5,28.4,29.3], "warming", "+0.5"],
+    ["US", "Chicago",     [-1.8,0.4,11.0,14.1,17.4,27.0],  [-2.1,4.3,11.0,16.3,19.7,24.2],  "warming", "+0.6"],
+    ["US", "Atlanta",     [8.1,15.6,19.6,24.7,26.2,30.6],  [11.0,14.8,21.8,25.5,26.2,27.3], "warming", "+0.1"],
+    ["US", "Miami",       [23.2,26.0,26.3,27.5,30.3,30.0], [23.3,23.3,25.9,26.9,30.3,29.3], "cooling", "-0.7"],
+    ["US", "Boston",      [0.4,1.6,9.8,14.6,18.8,25.4],    [0.4,0.2,9.4,13.9,20.8,26.8],    "cooling", "-0.9"],
+    ["DE", "Berlin",      [2.2, 0.6, 6.2, 12.0, 13.8, 19.7],    [-2.2, 0.8, 7.1, 9.4, 15.4, 17.4],    "cooling", "-1.1"],
+    ["FR", "Ludwigslust",  [2.0, 1.4, 5.7, 10.6, 13.1, 17.8],    [-1.6, 0.2, 6.4, 8.2, 14.0, 16.0],    "cooling", "-1.2"],
+    ["CA", "Calgary",      [-5.7, -13.1, -0.4, 4.8, 12.3, 15.1],   [-4.1, -4.3, -2.6, 1.9, 13.0, 11.8],   "warming", "+0.5"],
+    ["UK", "London",       [4.1, 5.4, 8.2, 12.3, 15.1, 19.5],       [5.2, 8.0, 8.9, 12.1, 16.4, 16.1],     "warming", "+0.8"],
+    ["AU", "Morayfield",   [24.5, 24.5, 23.7, 20.8, 18.4, 14.8],    [24.9, 24.2, 23.0, 20.8, 18.6, 16.3],  "warming", "+0.1"],
+    ["AE", "Dubai",        [18.8, 20.8, 23.8, 29.0, 32.1, 33.3],    [19.1, 21.7, 23.9, 25.2, 31.1, 33.4],  "cooling", "-0.6"]
 ];
 
 function renderMonthlyTable() {
     var tbody = document.querySelector('#monthlyTable tbody');
     if (!tbody) return;
     var rows = MONTHLY_TABLE_DATA.map(function(city) {
-        var name = city[0], v25 = city[1], v26 = city[2], trendClass = city[3], trendVal = city[4];
+        var countryCode = city[0], name = city[1], v25 = city[2], v26 = city[3], trendClass = city[4], trendVal = city[5];
         var trendArrow = trendClass === 'warming' ? '\u25B2' : '\u25BC';
         var cells = '';
         for (var m = 0; m < 6; m++) {
@@ -528,9 +528,10 @@ function renderMonthlyTable() {
                 + '<span class="cell-2026">' + v26[m].toFixed(1) + '</span><br>'
                 + '<span class="diff-badge ' + diffClass + '">' + diffSign + diff.toFixed(1) + '\u2103</span></td>';
         }
-        return '<tr><td class="city-name"><a href="#' + name.replace(/ /g, '_') + '">' + name + '</a></td>'
-            + cells
-            + '<td class="trend-cell"><span class="' + trendClass + '">' + trendArrow + ' ' + trendVal + '\u2103</span></td></tr>';
+        return '<tr><td class="country-code">' + countryCode + '</td>'
+            + '<td class="city-name"><a href="#' + name.replace(/ /g, '_') + '">' + name + '</a></td>'
+            + '<td class="trend-cell"><span class="' + trendClass + '">' + trendArrow + ' ' + trendVal + '\u2103</span></td>'
+            + cells + '</tr>';
     }).join('');
     tbody.innerHTML = rows;
 }
@@ -1161,7 +1162,7 @@ renderMonthlyTable();
         expandRow.id = 'tableExpandRow';
         expandRow.className = 'table-expand-row';
         var td = document.createElement('td');
-        td.colSpan = 8;
+        td.colSpan = 9;
         var btn = document.createElement('button');
         btn.className = 'table-expand-btn';
         btn.textContent = '\u663E\u793A\u5168\u90E8\uFF089\u57CE\u5E02\uFF09';
@@ -1516,7 +1517,7 @@ async function refreshMonthlyData() {
         let totalDiff = 0;
 
         for (let m = 0; m < 6; m++) {
-            const td = row.children[m + 1];
+            const td = row.children[m + 3];
             const v25 = avgs2025 ? avgs2025[m] : 0;
             const v26 = avgs2026[m] != null ? avgs2026[m] : v25;
             const diff = v26 - v25;
@@ -1534,7 +1535,7 @@ async function refreshMonthlyData() {
         const avgDiff = totalDiff / 6;
         const trendClass = avgDiff > 0.05 ? 'warming' : (avgDiff < -0.05 ? 'cooling' : 'neutral-diff');
         const trendArrow = avgDiff > 0.05 ? '\u25B2' : (avgDiff < -0.05 ? '\u25BC' : '\u2500');
-        const trendTd = row.children[7];
+        const trendTd = row.children[2];
         trendTd.innerHTML = '<span class="' + trendClass + '">' + trendArrow + ' ' +
             (avgDiff >= 0 ? '+' : '') + avgDiff.toFixed(1) + '\u2103</span>';
     });
@@ -2041,9 +2042,10 @@ function addToMonthlyTable(key, label, dailyArr) {
         if (yr === 2025) { m2025[mo] += d.avg; c2025[mo]++; }
         else if (yr === 2026) { m2026[mo] += d.avg; c2026[mo]++; }
     });
-    // Build row (only Jan-Jun for display)
+    // Build row (new order: country code → name → trend → months)
     var tr = document.createElement('tr');
-    tr.innerHTML = '<td class="city-name"><a href="#' + key + '" onclick="scrollToCity(\'' + key + '\')">' + label + '</a></td>';
+    tr.innerHTML = '<td class="country-code">--</td>'
+        + '<td class="city-name"><a href="#' + key + '" onclick="scrollToCity(\'' + key + '\')">' + label + '</a></td>';
     var totalDiff = 0;
     for (var mo = 0; mo < 6; mo++) {
         var v25 = c2025[mo] > 0 ? m2025[mo] / c2025[mo] : 0;
@@ -2066,7 +2068,8 @@ function addToMonthlyTable(key, label, dailyArr) {
     trendTd.className = 'trend-cell';
     trendTd.innerHTML = '<span class="' + trendClass + '">' + trendArrow + ' ' +
         (avgDiff >= 0 ? '+' : '') + avgDiff.toFixed(1) + '℃</span>';
-    tr.appendChild(trendTd);
+    // Insert trend cell after city name (before month cells)
+    tr.insertBefore(trendTd, tr.children[2]);
     tbody.appendChild(tr);
 }
 
@@ -2222,7 +2225,7 @@ function recalcAllKpis() {
     var validCount = 0;
 
     MONTHLY_TABLE_DATA.forEach(function(city) {
-        var name = city[0], trendClass = city[3], trendValStr = city[4];
+        var name = city[1], trendClass = city[4], trendValStr = city[5];
         var trendVal = parseFloat(trendValStr);
         if (isNaN(trendVal)) return;
 
@@ -2354,7 +2357,7 @@ function deleteCity(key) {
         }
 
         // 10. Remove from static arrays (preset cities)
-        MONTHLY_TABLE_DATA = MONTHLY_TABLE_DATA.filter(function(r) { return r[0] !== key; });
+        MONTHLY_TABLE_DATA = MONTHLY_TABLE_DATA.filter(function(r) { return r[1] !== key; });
         MAP_CITIES = MAP_CITIES.filter(function(c) { return c.key !== key; });
         WEATHER_CITIES = WEATHER_CITIES.filter(function(c) { return c.key !== key; });
         COMPARE_CITIES = COMPARE_CITIES.filter(function(ck) { return ck !== key; });
