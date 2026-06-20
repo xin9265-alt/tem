@@ -36,7 +36,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
 .nav-shortcut.active { background: #334155 !important; color: #fff !important; border-color: #334155 !important; }
 .nav-sep { color: #d1d5db; font-size: 16px; margin: 0 2px; user-select: none; align-self: center; }
 .container { max-width: 1400px; margin: 0 auto; padding: 32px 48px; }
-.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 36px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 36px; opacity: 0; transition: opacity 0.2s ease; }
+.kpi-grid.ready { opacity: 1; }
 .kpi-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04); border-left: 4px solid #2563eb; }
 .kpi-card.warm { border-left-color: #dc2626; }
 .kpi-card.cool { border-left-color: #2563eb; }
@@ -97,18 +98,18 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
 .weather-header .refresh-btn { padding: 6px 16px; border: 1px solid #d1d5db; background: #fff; border-radius: 6px; cursor: pointer; font-size: 12px; color: #374151; transition: all 0.2s; }
 .weather-header .refresh-btn:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
 .weather-header .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.weather-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.weather-card { background: #f8fafc; border-radius: 10px; padding: 16px; text-align: center; border: 1px solid #e2e8f0; transition: all 0.2s; min-height: 140px; display: flex; flex-direction: column; justify-content: center; }
+.weather-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
+.weather-card { background: #f8fafc; border-radius: 10px; padding: 10px 6px; text-align: center; border: 1px solid #e2e8f0; transition: all 0.2s; min-height: 100px; display: flex; flex-direction: column; justify-content: center; }
 .weather-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: #cbd5e1; }
-.weather-card .wc-city { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 4px; }
-.weather-card .wc-icon { font-size: 28px; line-height: 1.2; }
-.weather-card .wc-temp { font-size: 32px; font-weight: 700; color: #111827; line-height: 1.1; }
-.weather-card .wc-details { display: flex; justify-content: center; gap: 12px; font-size: 11px; color: #6b7280; margin-top: 6px; flex-wrap: wrap; }
+.weather-card .wc-city { font-size: 11px; font-weight: 600; color: #374151; margin-bottom: 2px; }
+.weather-card .wc-icon { font-size: 20px; line-height: 1.2; }
+.weather-card .wc-temp { font-size: 22px; font-weight: 700; color: #111827; line-height: 1.1; }
+.weather-card .wc-details { display: flex; justify-content: center; gap: 6px; font-size: 9px; color: #6b7280; margin-top: 4px; flex-wrap: wrap; }
 .weather-card .wc-details span { white-space: nowrap; }
-.weather-card .wc-hilo { font-size: 12px; color: #4b5563; margin-top: 4px; }
+.weather-card .wc-hilo { font-size: 10px; color: #4b5563; margin-top: 2px; }
 .weather-card .wc-hilo .hi { color: #dc2626; font-weight: 500; }
 .weather-card .wc-hilo .lo { color: #2563eb; font-weight: 500; }
-.weather-card .wc-localtime { font-size: 11px; color: #94a3b8; margin: 4px 0 2px 0; }
+.weather-card .wc-localtime { font-size: 9px; color: #94a3b8; margin: 2px 0 2px 0; }
 .weather-card.loading { animation: pulse 1.5s ease-in-out infinite; }
 .weather-card.error { border-color: #fecaca; background: #fef2f2; }
 .weather-card.error .wc-temp { color: #dc2626; font-size: 14px; font-weight: 500; }
@@ -116,7 +117,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
 .weather-card .skeleton { background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
 .skeleton-line { height: 12px; margin: 6px auto; border-radius: 4px; }
 @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-@media (max-width: 1024px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } .weather-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1024px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } .weather-grid { grid-template-columns: repeat(5, 1fr); } }
 @media (max-width: 768px) {
     html { scroll-padding-top: 56px; }
     .header { padding: 24px 16px; }
@@ -268,23 +269,23 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
 <div class="kpi-grid">
     <div class="kpi-card warm">
         <div class="kpi-label">2026上半年变暖城市</div>
-        <div class="kpi-value warming" id="warmingCount">7</div>
-        <div class="kpi-detail" id="warmingCountDetail">共7个城市同比偏暖</div>
+        <div class="kpi-value warming" id="warmingCount">&ndash;</div>
+        <div class="kpi-detail" id="warmingCountDetail">共&ndash;个城市同比偏暖</div>
     </div>
     <div class="kpi-card cool">
         <div class="kpi-label">2026上半年变冷城市</div>
-        <div class="kpi-value cooling" id="coolingCount">2</div>
-        <div class="kpi-detail" id="coolingCountDetail">共2个城市同比偏冷</div>
+        <div class="kpi-value cooling" id="coolingCount">&ndash;</div>
+        <div class="kpi-detail" id="coolingCountDetail">共&ndash;个城市同比偏冷</div>
     </div>
     <div class="kpi-card">
         <div class="kpi-label">平均温差幅度</div>
-        <div class="kpi-value" id="avgDiffAmplitude">1.52</div>
+        <div class="kpi-value" id="avgDiffAmplitude">&ndash;</div>
         <div class="kpi-detail">上半年月均高温|差值|均值 (℃)</div>
     </div>
     <div class="kpi-card">
         <div class="kpi-label">最大变暖幅度</div>
-        <div class="kpi-value warming" id="maxWarmingAmplitude">2.6</div>
-        <div class="kpi-detail" id="maxWarmingCity">Phoenix</div>
+        <div class="kpi-value warming" id="maxWarmingAmplitude">&ndash;</div>
+        <div class="kpi-detail" id="maxWarmingCity">&ndash;</div>
     </div>
 </div>
 
@@ -329,7 +330,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
 <div class="table-section">
     <h2>城市详情对比</h2>
     <div id="cityCardsContainer">
-        <div class="city-card" id="Los_Angeles">
+        <div class="city-card" id="Los_Angeles"><button class="city-delete-btn" onclick="deleteCity('Los_Angeles')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>Los Angeles</h2>
                 <p>2026年上半年比2025年同期平均偏高 <span class="warming">+1.3℃</span></p>
@@ -338,7 +339,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
                 <canvas id="chart_Los_Angeles"></canvas>
             </div>
         </div>
-        <div class="city-card" id="Seattle">
+        <div class="city-card" id="Seattle"><button class="city-delete-btn" onclick="deleteCity('Seattle')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>Seattle</h2>
                 <p>2026年上半年比2025年同期平均偏高 <span class="warming">+0.6℃</span></p>
@@ -347,7 +348,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
                 <canvas id="chart_Seattle"></canvas>
             </div>
         </div>
-        <div class="city-card" id="Las_Vegas">
+        <div class="city-card" id="Las_Vegas"><button class="city-delete-btn" onclick="deleteCity('Las_Vegas')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>Las Vegas</h2>
                 <p>2026年上半年比2025年同期平均偏高 <span class="warming">+1.5℃</span></p>
@@ -356,7 +357,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
                 <canvas id="chart_Las_Vegas"></canvas>
             </div>
         </div>
-        <div class="city-card" id="Phoenix">
+        <div class="city-card" id="Phoenix"><button class="city-delete-btn" onclick="deleteCity('Phoenix')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>Phoenix</h2>
                 <p>2026年上半年比2025年同期平均偏高 <span class="warming">+2.6℃</span></p>
@@ -365,7 +366,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
                 <canvas id="chart_Phoenix"></canvas>
             </div>
         </div>
-        <div class="city-card" id="Houston">
+        <div class="city-card" id="Houston"><button class="city-delete-btn" onclick="deleteCity('Houston')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>Houston</h2>
                 <p>2026年上半年比2025年同期平均偏高 <span class="warming">+0.5℃</span></p>
@@ -374,7 +375,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
                 <canvas id="chart_Houston"></canvas>
             </div>
         </div>
-        <div class="city-card" id="Chicago">
+        <div class="city-card" id="Chicago"><button class="city-delete-btn" onclick="deleteCity('Chicago')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>Chicago</h2>
                 <p>2026年上半年比2025年同期平均偏高 <span class="warming">+0.6℃</span></p>
@@ -383,7 +384,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
                 <canvas id="chart_Chicago"></canvas>
             </div>
         </div>
-        <div class="city-card" id="Atlanta">
+        <div class="city-card" id="Atlanta"><button class="city-delete-btn" onclick="deleteCity('Atlanta')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>Atlanta</h2>
                 <p>2026年上半年比2025年同期平均偏高 <span class="warming">+0.1℃</span></p>
@@ -392,7 +393,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
                 <canvas id="chart_Atlanta"></canvas>
             </div>
         </div>
-        <div class="city-card" id="Miami">
+        <div class="city-card" id="Miami"><button class="city-delete-btn" onclick="deleteCity('Miami')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>Miami</h2>
                 <p>2026年上半年比2025年同期平均偏低 <span class="cooling">-0.7℃</span></p>
@@ -401,7 +402,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
                 <canvas id="chart_Miami"></canvas>
             </div>
         </div>
-        <div class="city-card" id="Boston">
+        <div class="city-card" id="Boston"><button class="city-delete-btn" onclick="deleteCity('Boston')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>Boston</h2>
                 <p>2026年上半年比2025年同期平均偏低 <span class="cooling">-0.9℃</span></p>
@@ -410,7 +411,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
                 <canvas id="chart_Boston"></canvas>
             </div>
         </div>
-        <div class="city-card" id="Berlin">
+        <div class="city-card" id="Berlin"><button class="city-delete-btn" onclick="deleteCity('Berlin')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>Berlin, DE</h2>
                 <p>2026年上半年比2025年同期平均偏低 <span class="cooling">-1.1℃</span></p>
@@ -419,7 +420,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
                 <canvas id="chart_Berlin"></canvas>
             </div>
         </div>
-        <div class="city-card" id="Ludwigslust">
+        <div class="city-card" id="Ludwigslust"><button class="city-delete-btn" onclick="deleteCity('Ludwigslust')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>Ludwigslust, FR</h2>
                 <p>2026年上半年比2025年同期平均偏低 <span class="cooling">-1.2℃</span></p>
@@ -429,7 +430,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
             </div>
         </div>
     </div>
-        <div class="city-card" id="Calgary">
+        <div class="city-card" id="Calgary"><button class="city-delete-btn" onclick="deleteCity('Calgary')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>Calgary, CA</h2>
                 <p>2026年上半年比2025年同期平均偏高 <span class="warming">+0.5℃</span></p>
@@ -438,7 +439,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
                 <canvas id="chart_Calgary"></canvas>
             </div>
         </div>
-        <div class="city-card" id="London">
+        <div class="city-card" id="London"><button class="city-delete-btn" onclick="deleteCity('London')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>London, UK</h2>
                 <p>2026年上半年比2025年同期平均偏高 <span class="warming">+0.8℃</span></p>
@@ -447,7 +448,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
                 <canvas id="chart_London"></canvas>
             </div>
         </div>
-        <div class="city-card" id="Morayfield">
+        <div class="city-card" id="Morayfield"><button class="city-delete-btn" onclick="deleteCity('Morayfield')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>Morayfield, AU</h2>
                 <p>2026年上半年比2025年同期平均偏高 <span class="warming">+0.1℃</span></p>
@@ -456,7 +457,7 @@ td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
                 <canvas id="chart_Morayfield"></canvas>
             </div>
         </div>
-        <div class="city-card" id="Dubai">
+        <div class="city-card" id="Dubai"><button class="city-delete-btn" onclick="deleteCity('Dubai')" title="删除此城市">✕</button>
             <div class="city-card-header">
                 <h2>Dubai, AE</h2>
                 <p>2026年上半年比2025年同期平均偏低 <span class="cooling">-0.6℃</span></p>
@@ -782,7 +783,11 @@ const MAP_CITIES = [
     { key: "Miami", name: "Miami", lat: 25.76, lon: -80.19, trend: "&#9660; -0.7\u2103", trendClass: "cooling" },
     { key: "Boston", name: "Boston", lat: 42.36, lon: -71.06, trend: "&#9660; -0.9\u2103", trendClass: "cooling" },
     { key: "Berlin", name: "Berlin, DE", lat: 52.52437, lon: 13.41053, trend: "&#9660; -1.1\u2103", trendClass: "cooling" },
-    { key: "Ludwigslust", name: "Ludwigslust, FR", lat: 53.32451, lon: 11.49714, trend: "&#9660; -1.2\u2103", trendClass: "cooling" }
+    { key: "Ludwigslust", name: "Ludwigslust, FR", lat: 53.32451, lon: 11.49714, trend: "&#9660; -1.2\u2103", trendClass: "cooling" },
+    { key: "Calgary", name: "Calgary, CA", lat: 51.05011, lon: -114.08529, trend: "&#9650; +0.5\u2103", trendClass: "warming" },
+    { key: "London", name: "London, UK", lat: 51.50853, lon: -0.12574, trend: "&#9650; +0.8\u2103", trendClass: "warming" },
+    { key: "Morayfield", name: "Morayfield, AU", lat: -27.10876, lon: 152.94907, trend: "&#9650; +0.1\u2103", trendClass: "warming" },
+    { key: "Dubai", name: "Dubai, AE", lat: 25.07725, lon: 55.30927, trend: "&#9660; -0.6\u2103", trendClass: "cooling" }
 ];
 
 var mapInitialized = false;
@@ -814,20 +819,42 @@ function loadLeafletAndInitMap() {
 function _doInitMap(container) {
     if (mapInitialized) return;
     mapInitialized = true;
-    var map = L.map('usMap', { scrollWheelZoom: true, zoomControl: true }).setView([39, -97], 4);
+    var map = L.map('usMap', { scrollWheelZoom: true, zoomControl: true });
     window.mapInstance = map;
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 18
     }).addTo(map);
-    MAP_CITIES.forEach(function(c) {
-        addCityMarkerToMap(c);
-    });
+
+    // Build lookup from MAP_CITIES
+    var cityMap = {};
+    MAP_CITIES.forEach(function(c) { cityMap[c.key] = c; });
+
+    // Generate markers from CITY_LIST (defense: always in sync with nav bar)
+    var sourceList = (typeof CITY_LIST !== 'undefined' && CITY_LIST.length > 0) ? CITY_LIST : null;
+    if (sourceList) {
+        sourceList.forEach(function(entry) {
+            var c = cityMap[entry.key];
+            if (c) {
+                addCityMarkerToMap(c);
+            }
+        });
+    } else {
+        MAP_CITIES.forEach(function(c) { addCityMarkerToMap(c); });
+    }
+
     // Add any pending cities that were queued before map initialized
     if (window.pendingMapCities && window.pendingMapCities.length > 0) {
         window.pendingMapCities.forEach(function(c) { addCityMarkerToMap(c); });
         window.pendingMapCities = [];
     }
+
+    // Fit map bounds to cover all city markers
+    var bounds = L.latLngBounds();
+    MAP_CITIES.forEach(function(c) {
+        bounds.extend([c.lat, c.lon]);
+    });
+    map.fitBounds(bounds, { padding: [40, 40] });
 }
 
 // IntersectionObserver: load map when near viewport, fallback to 2s delay
@@ -1545,6 +1572,7 @@ var COMPARE_LABELS = ['Los Angeles', 'Seattle', 'Las Vegas', 'Phoenix', 'Houston
 var compareChart2026 = null;
 var MAX_EXTRA_CITIES = 10;
 var DEFAULT_CITY_KEYS = {'Los_Angeles':1,'Seattle':1,'Las_Vegas':1,'Phoenix':1,'Houston':1,'Chicago':1,'Atlanta':1,'Miami':1,'Boston':1,'Berlin':1,'Ludwigslust':1,'Calgary':1,'London':1,'Morayfield':1,'Dubai':1};
+var DEFAULT_KEYS_PRESET = ['Los_Angeles','Seattle','Las_Vegas','Phoenix','Houston','Chicago','Atlanta','Miami','Boston','Berlin','Ludwigslust','Calgary','London','Morayfield','Dubai'];
 var ADDED_CITIES_KEY = 'weather_added_cities';
 
 var addedCities = {};
@@ -1665,6 +1693,8 @@ function initCompareChart() {
         renderCompareLegend();
         // Restore previously added cities from localStorage
         restoreAddedCities();
+        // Recalculate KPI from MONTHLY_TABLE_DATA (ensure initial values sync with preset cities)
+        recalcAllKpis();
         window.chartInitDone['compare2026'] = true;
     }).catch(function(e) {
         console.warn('Compare chart init failed:', e.message);
@@ -2170,59 +2200,34 @@ function getCityNumericDiff(dailyArr) {
 }
 
 function recalcAllKpis() {
+    // Aggregate from MONTHLY_TABLE_DATA (single source of truth, synced with monthly table)
     var warmingCount = 0;
     var coolingCount = 0;
-    var allDiffs = [];
+    var neutralCount = 0;
     var maxWarming = -Infinity;
     var maxWarmingCity = '';
+    var sumAbs = 0;
+    var validCount = 0;
 
-    // Merge default 9 city keys with any added cities (defensive: don't rely solely on mutable CITY_LIST)
-    var DEFAULT_KEYS = ['Los_Angeles','Seattle','Las_Vegas','Phoenix','Houston','Chicago','Atlanta','Miami','Boston','Berlin','Ludwigslust','Calgary','London','Morayfield','Dubai'];
-    var allKeys = DEFAULT_KEYS.slice();
-    Object.keys(addedCities).forEach(function(k) {
-        if (allKeys.indexOf(k) === -1) allKeys.push(k);
-    });
+    MONTHLY_TABLE_DATA.forEach(function(city) {
+        var name = city[0], trendClass = city[3], trendValStr = city[4];
+        var trendVal = parseFloat(trendValStr);
+        if (isNaN(trendVal)) return;
 
-    allKeys.forEach(function(key) {
-        // Get dailyArr from CITY_DATA_CACHE or static data
-        var diff;
-        if (addedCities[key] && addedCities[key].dailyArr) {
-            diff = getCityNumericDiff(addedCities[key].dailyArr);
+        validCount++;
+        sumAbs += Math.abs(trendVal);
+
+        if (trendClass === 'warming') {
+            warmingCount++;
+        } else if (trendClass === 'cooling') {
+            coolingCount++;
         } else {
-            // For default cities, compute from CITY_DATA_CACHE
-            var cityData = CITY_DATA_CACHE[key] || getCityData(key);
-            if (cityData && cityData.h25 && cityData.h26 && cityData.dates) {
-                // Reconstruct dailyArr-like structure
-                var monthly25 = [0,0,0,0,0,0], cnt25 = [0,0,0,0,0,0];
-                var monthly26 = [0,0,0,0,0,0], cnt26 = [0,0,0,0,0,0];
-                cityData.dates.forEach(function(mmdd, i) {
-                    var mo = parseInt(mmdd.split('-')[0]) - 1;
-                    if (mo >= 0 && mo < 6) {
-                        if (typeof cityData.h25[i] === 'number') { monthly25[mo] += cityData.h25[i]; cnt25[mo]++; }
-                        if (typeof cityData.h26[i] === 'number') { monthly26[mo] += cityData.h26[i]; cnt26[mo]++; }
-                    }
-                });
-                var total25 = 0, total26 = 0, cnt = 0;
-                for (var i = 0; i < 6; i++) {
-                    if (cnt25[i] > 0 && cnt26[i] > 0) {
-                        total25 += monthly25[i] / cnt25[i];
-                        total26 += monthly26[i] / cnt26[i];
-                        cnt++;
-                    }
-                }
-                diff = cnt > 0 ? (total26 - total25) / cnt : null;
-            } else {
-                diff = null;
-            }
+            neutralCount++;
         }
-        if (diff != null) {
-            allDiffs.push({ key: key, diff: diff });
-            if (diff > 0.05) warmingCount++;
-            else if (diff < -0.05) coolingCount++;
-            if (diff > maxWarming) {
-                maxWarming = diff;
-                maxWarmingCity = addedCities[key] ? addedCities[key].label : (function() { var ci = CITY_LIST.find(function(c){return c.key===key;}); return ci ? ci.display : key; })();
-            }
+
+        if (trendVal > maxWarming) {
+            maxWarming = trendVal;
+            maxWarmingCity = name;
         }
     });
 
@@ -2240,26 +2245,44 @@ function recalcAllKpis() {
     if (wcDetEl) wcDetEl.textContent = '共' + warmingCount + '个城市同比偏暖';
     if (ccDetEl) ccDetEl.textContent = '共' + coolingCount + '个城市同比偏冷';
 
-    if (allDiffs.length > 0) {
-        var sumAbs = 0;
-        allDiffs.forEach(function(d) { sumAbs += Math.abs(d.diff); });
-        var avgAmplitude = sumAbs / allDiffs.length;
+    if (validCount > 0) {
+        var avgAmplitude = sumAbs / validCount;
         if (avgAmplEl) avgAmplEl.textContent = avgAmplitude.toFixed(2);
         if (maxWarmEl) maxWarmEl.textContent = maxWarming.toFixed(1);
         if (maxWarmCityEl) maxWarmCityEl.textContent = maxWarmingCity;
     }
+
+    // Reveal KPI grid with fade-in
+    var kpiGrid = document.querySelector('.kpi-grid');
+    if (kpiGrid) kpiGrid.classList.add('ready');
 }
 
 function deleteCity(key) {
-    if (!confirm('确定要删除城市 "' + (addedCities[key] ? addedCities[key].label : key) + '" 吗？此操作不可撤销。')) return;
+    // Determine city display name for confirm dialog
+    var displayName = key;
+    if (addedCities[key]) {
+        displayName = addedCities[key].label;
+    } else {
+        for (var i = 0; i < CITY_LIST.length; i++) {
+            if (CITY_LIST[i].key === key) { displayName = CITY_LIST[i].display || key; break; }
+        }
+    }
+    if (!confirm('确定要删除城市 "' + displayName + '" 吗？此操作不可撤销。')) return;
 
     try {
         // 1. Remove from DOM - city card
         var card = document.getElementById(key);
         if (card) card.remove();
 
-        // 2. Remove nav button
+        // 2. Remove nav button (dynamic: data-city-key; preset: onclick match)
         var navBtn = document.querySelector('.nav-bar button[data-city-key="' + key + '"]');
+        if (!navBtn) {
+            var allBtns = document.querySelectorAll('.nav-bar .nav-left button');
+            for (var b = 0; b < allBtns.length; b++) {
+                var oc = allBtns[b].getAttribute('onclick') || '';
+                if (oc.indexOf("scrollToCity('" + key + "')") >= 0) { navBtn = allBtns[b]; break; }
+            }
+        }
         if (navBtn) navBtn.remove();
 
         // 3. Remove from monthly table
@@ -2269,9 +2292,16 @@ function deleteCity(key) {
             if (tr) tr.remove();
         }
 
-        // 4. Remove from compare chart datasets (find by label)
-        if (compareChart2026 && addedCities[key]) {
-            var cityLabel = addedCities[key].label;
+        // 4. Remove from compare chart datasets (match by label)
+        var cityLabel = '';
+        if (addedCities[key]) {
+            cityLabel = addedCities[key].label;
+        } else {
+            for (var ci = 0; ci < COMPARE_LABELS.length; ci++) {
+                if (COMPARE_CITIES[ci] === key) { cityLabel = COMPARE_LABELS[ci]; break; }
+            }
+        }
+        if (compareChart2026 && cityLabel) {
             var datasets = compareChart2026.data.datasets;
             for (var i = datasets.length - 1; i >= 0; i--) {
                 if (datasets[i].label === cityLabel) {
@@ -2301,28 +2331,70 @@ function deleteCity(key) {
         CITY_LIST = CITY_LIST.filter(function(c) { return c.key !== key; });
         cityIndexMap = {};
         CITY_LIST.forEach(function(c, i) { cityIndexMap[c.key] = i; });
+
+        // 9. Remove from CITY_DATA_RAW (for preset cities)
+        var rawEl = document.getElementById('cityDataRaw');
+        if (rawEl) {
+            try {
+                var rawData = JSON.parse(rawEl.textContent);
+                if (rawData[key]) { delete rawData[key]; rawEl.textContent = JSON.stringify(rawData); }
+            } catch(e) {}
+        }
+
+        // 10. Remove from static arrays (preset cities)
+        MONTHLY_TABLE_DATA = MONTHLY_TABLE_DATA.filter(function(r) { return r[0] !== key; });
+        MAP_CITIES = MAP_CITIES.filter(function(c) { return c.key !== key; });
+        WEATHER_CITIES = WEATHER_CITIES.filter(function(c) { return c.key !== key; });
+        COMPARE_CITIES = COMPARE_CITIES.filter(function(ck) { return ck !== key; });
+        COMPARE_LABELS = COMPARE_LABELS.filter(function(label, i) { return COMPARE_CITIES[i] !== key && label !== cityLabel; });
+        // Re-sync: rebuild COMPARE_LABELS from actual COMPARE_CITIES
+        var newLabels = [];
+        for (var ci2 = 0; ci2 < COMPARE_CITIES.length; ci2++) {
+            var ck2 = COMPARE_CITIES[ci2];
+            var found = null;
+            for (var li = 0; li < CITY_LIST.length; li++) {
+                if (CITY_LIST[li].key === ck2) { found = CITY_LIST[li].display; break; }
+            }
+            newLabels.push(found || ck2);
+        }
+        COMPARE_LABELS = newLabels;
+        delete DEFAULT_CITY_KEYS[key];
+
+        // 11. Remove from recalcAllKpis DEFAULT_KEYS (update the array in-place)
+        var dkIdx = DEFAULT_KEYS_PRESET.indexOf(key);
+        if (dkIdx >= 0) DEFAULT_KEYS_PRESET.splice(dkIdx, 1);
     } finally {
-        // 9. Remove from addedCities (always run to prevent ghost restoration)
+        // 12. Remove from addedCities (always run to prevent ghost restoration)
         delete addedCities[key];
 
-        // 10. Persist to localStorage (always run)
+        // 13. Persist to localStorage (always run)
         saveAddedCities();
 
-        // 11. Clear weather cache (always run)
+        // 14. Clear weather cache (always run)
         try { localStorage.removeItem(TEMP_CACHE_PREFIX + key); } catch(e) {}
 
-        // 12. Remove map marker
+        // 15. Remove map marker
         removeCityMarkerFromMap(key);
         // Also remove from pending queue if present
         if (window.pendingMapCities) {
             window.pendingMapCities = window.pendingMapCities.filter(function(c) { return c.key !== key; });
         }
 
-        // 13. Remove weather card
+        // 16. Remove weather card
         removeCityWeatherCard(key);
 
-        // 14. Recalculate KPI dashboard
+        // 17. Recalculate KPI dashboard
         recalcAllKpis();
+
+        // 18. Re-render compare legend if chart exists
+        if (compareChart2026 && typeof renderCompareLegend === 'function') {
+            renderCompareLegend();
+        }
+
+        // 19. Re-render monthly table
+        if (typeof renderMonthlyTable === 'function') {
+            renderMonthlyTable();
+        }
     }
 }
 
